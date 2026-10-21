@@ -69,3 +69,8 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .box { height: clamp(110px, 19dvh, 230px); }
 .slider { justify-content: space-between; }
 .slider input { flex: 0 0 34%; width: 34%; height: 40px; }
+.slider.on input::-webkit-slider-runnable-track { background: var(--accent); }
+.slider.on input::-moz-range-track { background: var(--accent); }
+.slider.on input::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -8px; }
+.slider.on input::-moz-range-thumb { width: 20px; height: 20px; }
+.slider.on label { color: var(--accent); }

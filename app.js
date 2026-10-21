@@ -22,7 +22,11 @@ async function init() {
   fillClubs();
   $("#league").onchange = () => { fillClubs(true); refresh(); };
   $("#club").onchange = () => { club = $("#club").value; refresh(); };
-  $("#round").oninput = e => setRound(+e.target.value);
+  $("#round").oninput = e => { hideTips(); setRound(+e.target.value); };
+  const sl = $(".slider"), on = v => () => sl.classList.toggle("on", v);
+  for (const ev of ["pointerdown", "touchstart"]) $("#round").addEventListener(ev, on(true), { passive: true });
+  for (const ev of ["pointerup", "pointercancel", "touchend", "touchcancel", "blur"]) $("#round").addEventListener(ev, on(false));
+  document.addEventListener("pointerdown", e => { if (e.target.tagName !== "CANVAS") hideTips(); });
   $("#round").onkeydown = e => e.stopPropagation();
   document.onkeydown = e => {
     if (e.target.tagName === "SELECT" || e.target.type === "checkbox") return;
@@ -151,6 +155,14 @@ function draw() {
       },
     });
     bind($("#" + id));
+  }
+}
+
+function hideTips() {
+  for (const c of Object.values(charts)) {
+    c.setActiveElements([]);
+    c.tooltip.setActiveElements([], { x: 0, y: 0 });
+    c.update("none");
   }
 }
 
