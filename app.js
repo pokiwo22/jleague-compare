@@ -283,10 +283,10 @@ function drawPace() {
   }
   const c0 = css("--c0");
   ds.push({ label: `${pace.label} ${idx.teams[club]}（選択中）`, data: labels.map(r => (r <= pace.through ? pace.by[r - 1][f] : null)), borderColor: c0, backgroundColor: c0,
-    borderWidth: 3, pointRadius: 3.5, pointBorderColor: c0, pointBackgroundColor: css("--card"), pointBorderWidth: 1.5, tension: 0, order: 0 }); // 丸印つきの太線
+    borderWidth: 3.5, pointRadius: 0, tension: 0, order: 0 }); // 選択クラブ=一番太い青線(丸印はなし)
   charts.chPace = new Chart($("#chPace"), { type: "line", plugins: [cursor, endLabels], data: { labels, datasets: ds }, options: scaleOpts(f) });
   const rows = inc.map(p => `<div><b>${p.label}</b> ` + Object.keys(REF).filter(k => refs.has(k)).map(k => `<span class="ml">${REF[k]} ${p.cat[k].map(x => x.t.name).join("・")}</span>`).join(" ") + "</div>").join("");
-  $("#paceLegend").innerHTML = "<div>丸付きの太線＝選択中のクラブ（今季）／ 太い破線＝過去シーズンの該当クラブの平均（対象シーズンの全クラブ） ／ 細線＝個別のクラブ（色＝順位の種類、線の種類＝シーズン、線の端にシーズン下2桁とクラブ名）。34節制のシーズンは34節まで。</div>" + rows;
+  $("#paceLegend").innerHTML = "<div>太い青線＝選択中のクラブ（今季）／ 太い破線＝過去シーズンの該当クラブの平均（対象シーズンの全クラブ） ／ 細線＝個別のクラブ（色＝順位の種類、線の種類＝シーズン、線の端にシーズン下2桁とクラブ名）。34節制のシーズンは34節まで。</div>" + rows;
 }
 
 function hideTips() {
