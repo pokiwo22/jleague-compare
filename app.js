@@ -255,7 +255,7 @@ function renderStrips() {
       const nm = s.all[opp]?.name ?? opp, jp = { w: "勝ち", d: "分け", l: "負け" }[res];
       return `<div class="sq ${res} ${home ? "h" : "a"}" data-r="${r}" style="grid-column:${((r - 1) % cols) + 1};grid-row:${r > cols ? 2 : 1}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${gf}-${ga} ${jp}${rk ? `（相手は${rkMode === "final" ? "最終" : "その時"}${rk}位）` : ""}">${rk ?? "—"}</div>`;
     }).join("");
-    return `<div class="srow"><div class="slab">${s.label.replace(/^20/, "")}</div><div class="sgrid" style="--c:${cols}">${q}</div></div>`;
+    return `<div class="srow" style="--sc:var(--c${S.indexOf(s) % 6})"><div class="slab">${s.label.replace(/^20/, "")}</div><div class="sgrid" style="--c:${cols}">${q}</div></div>`;
   }).join("") + `<div class="note2"><span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 数字＝相手の${rkMode === "final" ? "<b>最終順位</b>（未確定のシーズンは現時点）" : "その試合の<b>直前</b>の順位（1〜3節は—）"} ／ 右下の小さな文字: H＝ホーム・A＝アウェイ ／ 太い枠＝選んだ節 ／ 上段=前半・下段=後半の節</div>`;
   dimStrips();
 }

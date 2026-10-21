@@ -198,3 +198,6 @@ details > .controls { margin: 8px 0 6px; }
 .sq.h::after { content: "H"; }
 .sq.a::after { content: "A"; }
 .sq { padding-bottom: 3px; box-sizing: border-box; } /* 数字を少し上へ(右下のH/Aと重ならないように) */
+
+/* 選んだ節の枠は、そのシーズンのグラフの線の色に合わせる */
+.sq.now { outline-color: var(--sc, var(--fg)); outline-width: 3px; }
