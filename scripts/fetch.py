@@ -159,7 +159,7 @@ def apply_official(d, season, league, prev):
             for tid, t in d["teams"].items():
                 t["byRound"][n - 1]["pending"] = pt[tid]["byRound"][n - 1]["pending"]
             continue
-        time.sleep(0.7)
+        time.sleep(1)
         m, todo = {}, []
         for r in fetch_table(season, cid, n):
             key = r["slug"] or r["name"]
