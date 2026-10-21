@@ -226,3 +226,6 @@ details > .controls { margin: 8px 0 6px; }
 .sumclub { font-size: 1.15rem; font-weight: 800; color: var(--clubt, var(--fg)); }
 .sumlg { font-size: .68rem; }
 @media (prefers-color-scheme: dark) { .sumclub { color: color-mix(in srgb, var(--club, #fff) 62%, #fff); } }
+
+/* 一番下の注意書きは小さく */
+.note { font-size: .6rem; line-height: 1.55; }
