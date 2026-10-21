@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -106,10 +106,10 @@ function setRound(r) {
   if (round !== prev) navigator.vibrate?.(8); // Androidのみ(iOS Safariは非対応)
   $("#round").value = round;
   $("#roundOut").textContent = round;
-  const q = new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value });
-  history.replaceState(null, "", "?" + q);
+  clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value })), 250);
   cards();
-  Object.values(charts).forEach(c => c.update("none"));
+  Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
 }
 
 function cards() {
@@ -131,14 +131,18 @@ function cards() {
   }).join("");
 }
 
-const cursor = {
-  id: "cursor",
-  afterDraw(ch) {
-    const x = ch.scales.x.getPixelForValue(round - 1), { top, bottom } = ch.chartArea, c = ch.ctx;
-    c.save(); c.strokeStyle = css("--muted"); c.lineWidth = 1.5; c.setLineDash([4, 3]);
-    c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke(); c.restore();
-  },
-};
+function moveCursor(ch) {
+  if (!ch.cur) {
+    ch.cur = document.createElement("div");
+    ch.cur.className = "cur";
+    ch.canvas.parentNode.append(ch.cur);
+  }
+  const { top, bottom } = ch.chartArea;
+  ch.cur.style.top = top + "px";
+  ch.cur.style.height = bottom - top + "px";
+  ch.cur.style.transform = `translateX(${ch.scales.x.getPixelForValue(round - 1)}px)`;
+}
+const cursor = { id: "cursor", afterLayout: moveCursor, afterDestroy: ch => ch.cur?.remove() };
 
 function draw() {
   const max = Math.max(1, ...S.map(s => s.rounds));
