@@ -195,4 +195,26 @@ function bind(cv) {
   };
 }
 
+// カード+勝ち点グラフ(#shot)だけを画像化。操作UI(選択欄・下のパッド等)は写らない。
+async function shot() {
+  hideTips();
+  $("#shotHead").textContent = `${idx.teams[club]}　第${round}節時点`;
+  $("#shotFoot").textContent = location.host + location.pathname;
+  const cv = await html2canvas($("#shot"), {
+    scale: 2, backgroundColor: css("--bg"),
+    onclone: d => d.querySelectorAll(".shotHead").forEach(e => { e.style.cssText = "display:block;font-size:13px;color:" + css("--muted") + ";padding:4px 2px"; }),
+  });
+  return new Promise(r => cv.toBlob(r, "image/png"));
+}
+$("#cam").onclick = async () => {
+  const b = $("#cam");
+  b.disabled = true;
+  try {
+    const blob = await shot(), file = new File([blob], `jleague-${club}-r${round}.png`, { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] }).catch(e => { if (e.name !== "AbortError") throw e; });
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); }
+  } catch (e) { alert("画像の作成に失敗しました"); }
+  b.disabled = false;
+};
+
 init();

@@ -90,3 +90,8 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .cur { position: absolute; left: -1px; width: 2px; background: var(--muted); opacity: .8; pointer-events: none; z-index: 1; will-change: transform; }
 summary { justify-content: space-between; gap: 8px; }
 summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space: nowrap; }
+.shotHead { display: none; }
+#shot { background: var(--bg); }
+#cam { position: fixed; right: 12px; bottom: 76px; z-index: 3; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--fg); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+#cam:active { background: var(--accent); color: #fff; }
+#cam:disabled { opacity: .5; }

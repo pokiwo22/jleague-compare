@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jリーグ 節ごと比較</title>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 <main>
@@ -20,9 +20,13 @@
   <details id="seasonsBox"><summary><span id="seasonsSum">比較シーズン</span><span class="hint">タップ or クリック</span></summary><div id="seasons"></div></details>
 
 
-  <section id="cards" class="cards" aria-live="polite"></section>
+  <div id="shot">
+    <div id="shotHead" class="shotHead"></div>
+    <section id="cards" class="cards" aria-live="polite"></section>
 
-  <section class="chart"><h2>累積勝ち点</h2><div class="box"><canvas id="chPts"></canvas></div></section>
+    <section class="chart"><h2>累積勝ち点</h2><div class="box"><canvas id="chPts"></canvas></div></section>
+    <div id="shotFoot" class="shotHead"></div>
+  </div>
   <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select></h2><div class="box"><canvas id="chGd"></canvas></div></section>
 
   <section class="slider">
@@ -30,9 +34,12 @@
     <input type="range" id="round" min="1" max="38" value="1" hidden>
   </section>
 
+  <button id="cam" type="button" aria-label="カード+勝ち点グラフを画像にして共有・保存"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+
   <p class="note">※ 勝ち点は勝3・分1・敗0。「第N節時点」は第1〜N節の試合のうち消化済みのみ集計します。延期試合は未消化の間その節に計上せず、消化後に本来の節へ計上します（未消化がある節は「未消化あり」と表示）。J1/J2のリーグ戦のみ。最終更新: <span id="updated">-</span>。2026年の百年構想リーグは除外。操作: グラフ上でホイール / 横スワイプ、キーボード ←→。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=11"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
