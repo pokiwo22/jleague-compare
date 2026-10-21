@@ -3,6 +3,7 @@
   python scripts/fetch.py                                 # 今季のみ更新
   python scripts/fetch.py --seasons 2021 2022 2023        # 過去シーズン一括取得
 """
+# Copyright (c) 2026 pokiwo22. All rights reserved. 無断転載・複製・商用利用禁止(LICENSE参照)
 import argparse, glob, json, os, re, sys, time, unicodedata, urllib.request
 from datetime import datetime, timezone
 

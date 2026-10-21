@@ -1,3 +1,4 @@
+// Copyright (c) 2026 pokiwo22. All rights reserved. 無断転載・複製・商用利用禁止(LICENSE参照)
 const $ = s => document.querySelector(s);
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);

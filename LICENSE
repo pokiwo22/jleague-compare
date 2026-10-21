@@ -1,0 +1,28 @@
+Copyright (c) 2026 pokiwo22. All rights reserved.
+
+【日本語】
+このリポジトリのプログラム・画面デザイン・文章（以下「本ソフトウェア」）の著作権は、制作者（pokiwo22）に帰属します。
+
+許可すること
+  ・本ソフトウェアで作られたWebサイトの閲覧・利用
+  ・個人の学習を目的とした、ソースコードの閲覧
+  ・GitHubの利用規約が認める範囲での、閲覧・フォーク
+
+許可しないこと（制作者の書面または明示的な許可がない限り）
+  ・本ソフトウェアの全部または一部の、複製・転載・再配布
+  ・本ソフトウェアを基にした改変物・類似サービスの公開
+  ・商用での利用（広告・課金・アプリ化などを含む）
+  ・同梱の取得スクリプトを用いた、データの大量取得や再配布
+
+データについて
+  本サイトが表示する試合結果・順位・監督名などのデータの権利は、Jリーグをはじめとする各権利者に帰属します。
+  本ライセンスは、そのデータには及びません。データの利用は、各権利者の定めに従ってください。
+
+免責
+  本ソフトウェアは現状のまま提供され、いかなる保証もありません。
+
+[English summary]
+All rights reserved. You may view and use the website, and read the source for personal study
+(including viewing/forking as permitted by GitHub's Terms of Service). Without written permission you may not copy,
+redistribute, publish derivative works or lookalike services, or use it commercially. The match data shown belongs to
+its respective rights holders (e.g. the J.League) and is not covered by this license. Provided "as is", without warranty.
