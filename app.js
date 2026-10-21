@@ -304,9 +304,9 @@ async function loadPace() {
     past.push({ key: s.key, label: s.label, cat: { 1: [L[0]], 2: [L[1]], 3: [L[2]], d: L.slice(-3) } });
   }
   pace = { label: cur.label, lg, by: ct.byRound, through: cd.through, rounds: cd.rounds, past };
-  $("#refSeasons").innerHTML = "<span>対象シーズン:</span>" + past.map(p => `<label class="chip ${paceOff.has(p.key) ? "" : "on"}" style="--cc:var(--fg)"><input class="vh" type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
+  $("#refSeasons").innerHTML = "<span>対象シーズン:</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
   $("#refSeasons").querySelectorAll("input").forEach(i => {
-    i.onchange = () => { i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); i.closest("label").classList.toggle("on", i.checked); renderRefs(); drawPace(); };
+    i.onchange = () => { i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); renderRefs(); drawPace(); };
   });
   renderRefs();
 }
@@ -315,12 +315,12 @@ async function loadPace() {
 function renderRefs() {
   if (!pace) return void ($("#refs").innerHTML = "");
   const inc = pace.past.filter(p => !paceOff.has(p.key));
-  const chip = (on, cc, input, text) => `<label class="chip ${on ? "on" : ""}" style="--cc:var(--rf${cc})"><input class="vh" type="checkbox" ${input} ${on ? "checked" : ""}>${text}</label>`;
-  const top = Object.entries(REF).map(([k, name]) => chip(refs.has(k), k, `value="${k}"`, name + (k === "d" ? "3クラブ" : ""))).join("");
-  // 選んだ種類ごとに、平均線と各クラブのチップを横に並べる(折り返す)
+  const top = Object.entries(REF).map(([k, name]) => `<label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}${k === "d" ? "3クラブ" : ""}</label>`).join("");
+  // 選んだ種類ごとに、平均線と各クラブのチェックを横に並べる(折り返す)
   const subs = Object.entries(REF).filter(([k]) => refs.has(k)).map(([k, name]) =>
-    `<div class="sub"><b class="sn" style="color:var(--rf${k})">${name}</b>` + chip(!avgOff.has(k), k, `data-avg="${k}"`, "平均") +
-    inc.flatMap(p => p.cat[k].map(x => chip(indOn.has(`${p.key}|${x.tid}`), k, `data-ind="${p.key}|${x.tid}"`, `${p.label.replace(/^20/, "")} ${x.t.name}`))).join("") + "</div>").join("");
+    `<div class="sub"><b class="sn" style="color:var(--rf${k})">${name}</b>` +
+    `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label>` +
+    inc.flatMap(p => p.cat[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${p.label.replace(/^20/, "")} ${x.t.name}</label>`)).join("") + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
 }
 
