@@ -114,3 +114,13 @@ summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space:
 #paceBox > summary { font-weight: 600; color: var(--fg); min-height: 36px; }
 #paceBox > summary .hint { font-weight: 400; }
 #paceBox[open] > summary { margin-bottom: 4px; }
+
+/* 開閉ボックス(比較シーズン/ペース比較): 色を濃く・「タップ or クリック」を目立つバッジに */
+:root { --tint: #e3ebfb; }
+@media (prefers-color-scheme: dark) { :root { --tint: #1f2b47; } }
+details { background: var(--tint); border-color: var(--accent); }
+summary { color: var(--fg); }
+summary .hint { background: var(--accent); color: #fff; opacity: 1; font-size: .62rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+#paceBox > summary { font-size: .74rem; white-space: nowrap; gap: 6px; }
+#paceBox > summary > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+#paceBox > summary .hint { font-weight: 600; font-size: .62rem; }
