@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jリーグ 節ごと比較</title>
-<link rel="stylesheet" href="style.css?v=29">
+<link rel="stylesheet" href="style.css?v=30">
 </head>
 <body>
 <main>
@@ -24,7 +24,7 @@
 
   <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="points">勝ち点</option><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select></h2><div class="box"><canvas id="chPts"></canvas></div><div id="mgrLegend"></div></section>
 
-  <section class="chart" id="paceSec"><h2>過去の上位・降格クラブとのペース比較</h2><div id="refs"></div><div id="refSeasons" class="refs"></div><div class="box"><canvas id="chPace"></canvas></div><div id="paceLegend"></div></section>
+  <details id="paceBox"><summary><span>過去の上位・降格クラブとのペース比較</span><span class="hint">▼ タップ or クリックで開く</span></summary><section class="chart" id="paceSec"><div id="refs"></div><div id="refSeasons" class="refs"></div><div class="box"><canvas id="chPace"></canvas></div><div id="paceLegend"></div></section></details>
 
   <section class="slider">
     <div class="pad" id="pad"><span class="thumb"></span><label>第<output id="roundOut">1</output>節時点 <small>◀ ここを横にドラッグ ▶</small></label></div>
@@ -34,6 +34,6 @@
   <p class="note">※ 勝ち点は勝3・分1・敗0。「第N節時点」は第1〜N節に属する試合の累積で、延期になった試合も本来の節に数えます（その節の時点で延期中だった試合がある場合は「延期あり」と表示）。順位は勝点→得失点→総得点の順で算出。J1/J2のリーグ戦のみ。2026年の百年構想リーグは除外。最終更新: <span id="updated">-</span>。操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=30"></script>
 </body>
 </html>

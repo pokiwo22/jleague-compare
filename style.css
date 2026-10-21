@@ -110,3 +110,7 @@ summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space:
 #refs .sub { margin: 3px 0 5px 14px; padding-left: 8px; border-left: 2px solid var(--line); }
 #refs .row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 5px; margin: 2px 0; color: var(--muted); }
 #refs .row2 b { min-width: 3.4em; font-weight: 600; }
+#paceBox { font-size: .85rem; margin: 6px 0; }
+#paceBox > summary { font-weight: 600; color: var(--fg); min-height: 36px; }
+#paceBox > summary .hint { font-weight: 400; }
+#paceBox[open] > summary { margin-bottom: 4px; }

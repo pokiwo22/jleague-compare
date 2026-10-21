@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(["1"]), paceOff = new Set(), indOff = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), paceOff = new Set(), indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -51,12 +51,13 @@ async function init() {
   if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
   if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(Boolean));
-  indOff = new Set((q.get("off") || "").split(",").filter(Boolean));
+  indOn = new Set((q.get("ind") || "").split(",").filter(Boolean));
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
+  $("#paceBox").ontoggle = () => drawPace();
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
     const i = e.target;
     if (i.dataset.avg) i.checked ? avgOff.delete(i.dataset.avg) : avgOff.add(i.dataset.avg);
-    else if (i.dataset.ind) i.checked ? indOff.delete(i.dataset.ind) : indOff.add(i.dataset.ind);
+    else if (i.dataset.ind) i.checked ? indOn.add(i.dataset.ind) : indOn.delete(i.dataset.ind);
     else i.checked ? refs.add(i.value) : refs.delete(i.value);
     renderRefs(); drawPace(); setRound(round);
   };
@@ -125,7 +126,7 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOff.size ? { off: [...indOff].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}) })), 250);
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}) })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
 }
@@ -239,7 +240,7 @@ function renderRefs() {
   const inc = pace.past.filter(p => !paceOff.has(p.key));
   $("#refs").innerHTML = Object.entries(REF).map(([k, name]) => {
     const sub = refs.has(k) ? '<div class="sub">' + `<div class="row2"><b>平均線</b><label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>過去${inc.length}シーズンの平均を表示</label></div>` + inc.map(p => `<div class="row2"><b>${p.label}</b>` +
-      p.cat[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOff.has(`${p.key}|${x.tid}`) ? "" : "checked"}>${x.t.name}</label>`).join("") + "</div>").join("") + "</div>" : "";
+      p.cat[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${x.t.name}</label>`).join("") + "</div>").join("") + "</div>" : "";
     return `<div class="rg"><label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}${k === "d" ? "3クラブ" : ""}</label>${sub}</div>`;
   }).join("");
 }
@@ -265,6 +266,7 @@ const endLabels = { // 個別線の右端にクラブ名(シーズン下2桁つ�
 };
 
 function drawPace() {
+  if (!$("#paceBox").open) return;
   charts.chPace?.destroy();
   delete charts.chPace;
   const box = $("#paceSec .box");
@@ -277,7 +279,7 @@ function drawPace() {
     const xs = inc.flatMap(p => p.cat[k]);
     if (xs.length && !avgOff.has(k)) ds.push({ label: `${REF[k]}クラブの平均`, data: labels.map(r => { const v = xs.map(x => val(x, r)).filter(y => y != null); return v.length ? avg(v) : null; }),
       borderColor: css(`--rf${k}`), borderWidth: 2.5, borderDash: [6, 3], pointRadius: 0, tension: 0, order: 1 });
-    inc.forEach((p, si) => p.cat[k].filter(x => !indOff.has(`${p.key}|${x.tid}`)).forEach(x =>
+    inc.forEach((p, si) => p.cat[k].filter(x => indOn.has(`${p.key}|${x.tid}`)).forEach(x =>
       ds.push({ label: "", endLabel: `${p.label.slice(2)} ${x.t.name}`, data: labels.map(r => val(x, r) ?? null), borderColor: css(`--rf${k}`), borderWidth: 1.5,
         borderDash: [[], [8, 4], [2, 3], [10, 3, 2, 3], [1, 4], [12, 2]][si % 6], pointRadius: 0, tension: 0, order: 2 })));
   }
