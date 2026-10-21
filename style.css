@@ -219,3 +219,11 @@ details > .controls { margin: 8px 0 6px; }
 .sumclub { font-size: 1.55rem; font-weight: 900; line-height: 1.1; color: var(--club, var(--fg)); white-space: nowrap; }
 .sumlg { font-size: .85rem; font-weight: 700; color: var(--fg); background: var(--badge); border-radius: 4px; padding: 1px 6px; }
 @media (prefers-color-scheme: dark) { .sumclub { color: color-mix(in srgb, var(--club, #fff) 62%, #fff); } }
+
+/* 一番上の枠: 文字は小さめに。左端の帯はクラブの2色(メイン/サブ)。文字色は読みやすい濃さに調整 */
+#seasonsBox { border-left: 1px solid var(--tint-line); padding-left: 16px;
+  box-shadow: inset 7px 0 0 0 var(--club, var(--tint-line)), inset 14px 0 0 0 var(--club2, var(--tint-line)); }
+#seasonsBox > summary { min-height: 40px; }
+.sumclub { font-size: 1.15rem; font-weight: 800; color: var(--clubt, var(--fg)); }
+.sumlg { font-size: .68rem; }
+@media (prefers-color-scheme: dark) { .sumclub { color: color-mix(in srgb, var(--club, #fff) 62%, #fff); } }

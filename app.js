@@ -6,17 +6,29 @@ const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
-// クラブの代表色の近似(文字色用)。公式の指定色ではなく、一般に知られたカラーから選んだ目安。未登録のクラブは通常の文字色
+// クラブカラー [メイン, サブ]。色名はWikipedia(チームカラー欄)に基づく。色コードはユニフォーム定義があるものはそれ、無いものは近似値(公式の指定コードではない)
 const CLUB_COLOR = {
-  akita: "#1d4f9b", chiba: "#c99a00", cosaka: "#d1006f", ehime: "#e87500", ftokyo: "#00479d", fujieda: "#6a2c91", fukuoka: "#0b3a8c",
-  gosaka: "#0a4ea1", hiroshima: "#4a2c8f", iwaki: "#d60000", iwata: "#0070b8", kanazawa: "#d4002a", kashima: "#a0012a", kashiwa: "#c8a000",
-  kawasakif: "#0a78b8", kitakyushu: "#c9a800", kobe: "#b00033", kofu: "#1d4ea0", kumamoto: "#d5001c", kusatsu: "#00843d", kyoto: "#5b2a86",
-  machida: "#00338d", matsumoto: "#00793a", mito: "#0a3a9a", nagasaki: "#ea5a00", nagoya: "#d4002a", niigata: "#e86a00", oita: "#004a9a",
-  okayama: "#8b1538", omiya: "#ee7700", ryukyu: "#d00020", sagamihara: "#00833e", sapporo: "#d6001c", sendai: "#c9a000", shimizu: "#e56a00",
-  shonan: "#5aa300", tochigi: "#c9a500", tokushima: "#00428f", tokyov: "#0b7a3b", tosu: "#0066b3", toyama: "#003c8f", urawa: "#d3001e",
-  yamagata: "#00439a", yamaguchi: "#c8102e", yokohamafc: "#1f86c7", yokohamafm: "#0b3a8a", "今治": "#1565c0", "八戸": "#2a8a3c",
-  "岩手": "#c01020", "鹿児島": "#0a2a66",
+  akita: ["#0044FF", "#6EC1E4"], chiba: ["#FFE100", "#00A040"], cosaka: ["#FA1A82", "#002060"], ehime: ["#ED6F23", "#F7AE23"],
+  ftokyo: ["#0A3C8C", "#D4002A"], fujieda: ["#8689C3", "#00A040"], fukuoka: ["#0B1E4B", "#939393"], gosaka: ["#0068B7", "#000000"],
+  hiroshima: ["#512D8E"], iwaki: ["#D3042C", "#00508F"], iwata: ["#5BA8DC"], kanazawa: ["#D7000F", "#000000"], kashima: ["#A5001E"],
+  kashiwa: ["#FFE100", "#000000"], kawasakif: ["#00A5E3", "#000000"], kitakyushu: ["#FFE100", "#E60012"], kobe: ["#B5002D"],
+  kofu: ["#0054A6"], kumamoto: ["#E60012", "#000000"], kusatsu: ["#0A1F5C", "#FFD500"], kyoto: ["#5B2A86"], machida: ["#003DA5"],
+  matsumoto: ["#006E3A"], mito: ["#0B3A8C"], nagasaki: ["#0068B7", "#F39800"], nagoya: ["#E60012", "#FFD700"], niigata: ["#F7931E", "#0B3A8C"],
+  oita: ["#0068B7", "#FFE100"], okayama: ["#9B1B30", "#0B1F4B"], omiya: ["#0B1F4B", "#F7931E"], ryukyu: ["#B7282E"],
+  sagamihara: ["#00A04B", "#000000"], sapporo: ["#E60012", "#000000"], sendai: ["#E5B800", "#00479D"], shimizu: ["#FF8800", "#003A78"],
+  shonan: ["#6FB92E", "#0068B7"], tochigi: ["#FFE100", "#0068B7"], tochigic: ["#010A43", "#D43184"], tokushima: ["#1D2F6F", "#00A04B"],
+  tokyov: ["#00A040", "#D9A400"], tosu: ["#0068B7", "#E8528C"], toyama: ["#0068B7"], urawa: ["#E60012", "#000000"],
+  yamagata: ["#1D4F9F"], yamaguchi: ["#F39800"], yokohamafc: ["#00A0E9", "#0068B7"], yokohamafm: ["#0033A0", "#E60012"],
+  "今治": ["#0068B7", "#FFE100"], "八戸": ["#00A040"], "宮崎": ["#E8528C"], "岩手": ["#E60012", "#000000"], "鹿児島": ["#0B1F4B"],
 };
+// 文字色: メイン色が明るすぎて読めない(黄色など)ときは、サブ色を文字色にする。メイン色は左の帯に残る。どちらも暗くして、背景とのコントラストを確保
+function textColor(cc) {
+  const lum = c => { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16) / 255).map(x => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  const ratio = c => 1.05 / (lum(c) + 0.05);
+  const darken = c => { let x = c; for (let k = 0; k < 12 && ratio(x) < 4.5; k++) x = "#" + [1, 3, 5].map(i => Math.round(parseInt(x.slice(i, i + 2), 16) * 0.9).toString(16).padStart(2, "0")).join(""); return x; };
+  const pick = ratio(cc[0]) >= 3 || !cc[1] || ratio(cc[1]) < 3 ? cc[0] : cc[1];
+  return darken(pick);
+}
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
 const latest = id => idx.seasons.find(s => s.leagues.J1?.includes(id) || s.leagues.J2?.includes(id));
@@ -105,7 +117,10 @@ async function refresh() {
     box.append(l);
   }
   $("#seasonsSum").innerHTML = `<b class="sumclub">${idx.teams[club]}</b><small class="sumlg">${$("#league").value}</small>`;
-  $("#seasonsBox").style.setProperty("--club", CLUB_COLOR[club] || "var(--fg)");
+  const cc = CLUB_COLOR[club], cs = $("#seasonsBox").style;
+  cs.setProperty("--club", cc ? cc[0] : "var(--tint-line)");
+  cs.setProperty("--club2", cc ? cc[1] || cc[0] : "var(--tint-line)"); // サブ色(単色クラブはメイン色と同じ)
+  cs.setProperty("--clubt", cc ? textColor(cc) : "var(--fg)");
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
