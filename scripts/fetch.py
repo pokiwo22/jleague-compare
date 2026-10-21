@@ -191,9 +191,10 @@ def build(rows, season, league):
         rounds = max(rounds, x["r"])
         if fin:
             through = max(through, x["r"])
-        for (tid, nm), gf, gg in ((x["h"], x["gh"], x["ga"]), (x["a"], x["ga"], x["gh"])):
+        for (tid, nm), opp, home, gf, gg in (
+                (x["h"], x["a"][0], 1, x["gh"], x["ga"]), (x["a"], x["h"][0], 0, x["ga"], x["gh"])):
             names[tid] = nm
-            ms.setdefault(tid, []).append((x["r"], fin, gf, gg, pend))
+            ms.setdefault(tid, []).append((x["r"], fin, gf, gg, pend, opp, home))
     teams = {}
     for tid, lst in ms.items():
         by = []
@@ -206,7 +207,9 @@ def build(rows, season, league):
             by.append({"round": n, "played": len(done), "points": 3 * w + d, "w": w, "d": d,
                        "l": len(done) - w - d, "gf": gf, "ga": ga, "gd": gf - ga,
                        "pending": sum(1 for x in lst if x[0] <= n and x[4])})
-        teams[tid] = {"name": names[tid], "byRound": by}
+        # 各試合: [節, 相手ID, ホーム=1/アウェイ=0, 得点, 失点](消化済みのみ)。画面の「対戦相手の順位と結果」用
+        teams[tid] = {"name": names[tid], "byRound": by,
+                      "matches": sorted([[x[0], x[5], x[6], x[2], x[3]] for x in lst if x[1]], key=lambda m: m[0])}
     return {"season": label(season), "key": str(season), "league": league, "rounds": rounds,
             "through": through, "teams": teams}
 
