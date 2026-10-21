@@ -67,3 +67,5 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .slider label { white-space: nowrap; font-size: .85rem; }
 .slider input { flex: 1; }
 .box { height: clamp(110px, 19dvh, 230px); }
+.slider { justify-content: space-between; }
+.slider input { flex: 0 0 34%; width: 34%; height: 40px; }
