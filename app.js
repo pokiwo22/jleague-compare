@@ -91,7 +91,7 @@ async function refresh() {
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
-    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams, mgr: t.mgr || [] };
+    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams, mgr: t.mgr || [], matches: t.matches || [] };
   }))).filter(Boolean);
   const max = Math.max(1, ...S.map(s => s.rounds));
   $("#round").max = max;
@@ -100,6 +100,7 @@ async function refresh() {
   await loadPace();
   draw();
   mgrLegend();
+  renderMatches();
 }
 
 // 監督: mgr=[{r:その監督の最初の節,n:名前}]。節に応じた監督と、中心線の色(最初の監督=シーズン色、以降は別色)
@@ -129,6 +130,7 @@ function setRound(r) {
   urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}) })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
+  dimMatches();
 }
 
 function cards() {
@@ -163,6 +165,35 @@ function moveCursor(ch) {
   ch.cur.style.transform = `translateX(${ch.scales.x.getPixelForValue(round - 1)}px)`;
 }
 const cursor = { id: "cursor", afterLayout: moveCursor, afterDestroy: ch => ch.cur?.remove() };
+
+// ---- 対戦相手の順位と結果: 1試合=1マス(中の数字=相手のその試合の直前の順位、色=結果) ----
+const MIN_RANK_ROUND = 4; // 開幕直後(1〜3節)は順位に意味がないので「—」
+const rankMap = (s, n) => { // 第n節終了時点の順位(勝点→得失点→総得点)
+  s.rk ??= {};
+  return s.rk[n] ??= Object.fromEntries(Object.entries(s.all)
+    .map(([id, t]) => [id, t.byRound[n - 1]])
+    .sort((a, b) => b[1].points - a[1].points || b[1].gd - a[1].gd || b[1].gf - a[1].gf)
+    .map(([id], i) => [id, i + 1]));
+};
+
+function renderMatches() {
+  const html = S.map((s, i) => {
+    if (!s.matches.length) return `<div class="mrow"><h4>${s.label}</h4><div class="note2">この試作データには試合の記録がありません。</div></div>`;
+    const q = s.matches.map(([r, opp, home, gf, ga]) => {
+      const res = gf > ga ? "w" : gf < ga ? "l" : "d", jp = { w: "勝ち", d: "分け", l: "負け" }[res];
+      const rk = r > MIN_RANK_ROUND - 1 ? rankMap(s, r - 1)[opp] : null;
+      const nm = s.all[opp]?.name ?? opp;
+      return `<div class="mq ${res} ${home ? "" : "a"}" data-r="${r}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${gf}-${ga} ${jp}${rk ? `（相手はその時${rk}位）` : ""}"><b>${rk ?? "—"}</b><small>${r}節</small></div>`;
+    }).join("");
+    return `<div class="mrow"><h4>${s.label}（${s.lg}）</h4><div class="mgrid">${q}</div></div>`;
+  }).join("");
+  $("#matchBody").innerHTML = html + `<div class="note2">数字＝相手の、その試合の<b>直前</b>の順位（1〜3節は—）／ <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 下線つき＝アウェイ ／ 薄い＝選んだ節より先</div>`;
+  dimMatches();
+}
+
+function dimMatches() {
+  document.querySelectorAll("#matchBody .mq").forEach(e => e.classList.toggle("dim", +e.dataset.r > round));
+}
 
 function mgrLegend() {
   const rows = S.filter(s => s.mgr.length > 1).map(s => {
