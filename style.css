@@ -201,8 +201,3 @@ details > .controls { margin: 8px 0 6px; }
 
 /* 選んだ節の枠は、そのシーズンのグラフの線の色に合わせる */
 .sq.now { outline-color: var(--sc, var(--fg)); outline-width: 3px; }
-
-/* メイングラフは画面上部に固定: 下の帯・成績をスクロールしても、グラフがついてくる */
-.chart.sticky { position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 4px 0 2px; box-shadow: 0 6px 8px -6px rgba(0, 0, 0, .3); }
-.chart.sticky h2 { margin-bottom: 0; }
-.chart.sticky .box { height: clamp(190px, 31dvh, 300px); }
