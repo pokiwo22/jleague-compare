@@ -48,7 +48,7 @@ async function init() {
     if (e.key === "ArrowRight") setRound(round + 1);
   };
   matchMedia("(prefers-color-scheme: dark)").onchange = draw;
-  if (["gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
+  if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
   refresh();
 }
@@ -80,14 +80,21 @@ async function refresh() {
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
-    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams };
+    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams, mgr: t.mgr || [] };
   }))).filter(Boolean);
   const max = Math.max(1, ...S.map(s => s.rounds));
   $("#round").max = max;
   if (!round) round = Math.max(1, ...S.filter(s => s.key === idx.seasons[0].key).map(s => s.through), 1);
   setRound(round);
   draw();
+  mgrLegend();
 }
+
+// 監督: mgr=[{r:その監督の最初の節,n:名前}]。節に応じた監督と、中心線の色(最初の監督=シーズン色、以降は別色)
+const PAL = ["#facc15", "#ffffff", "#111827", "#f97316"];
+const mgrIdx = (s, r) => s.mgr.reduce((k, m, j) => (m.r <= r ? j : k), 0);
+const mgrColor = (s, i, k) => (k === 0 ? css(`--c${i % 6}`) : PAL[(k - 1) % PAL.length]);
+const short = n => (n.includes("・") ? n.split("・").pop() : n);
 
 // 順位: 勝点 > 得失点 > 総得点(Jリーグ順位決定順)。その節時点の累積で比較
 const rank = (s, r) => {
@@ -103,7 +110,7 @@ const at = (s, r) => (r <= s.through ? s.by[r - 1] : null);
 function setRound(r) {
   const prev = round;
   round = Math.min(+$("#round").max, Math.max(1, r));
-  if (round !== prev) navigator.vibrate?.(8); // Androidのみ(iOS Safariは非対応)
+  if (round !== prev && navigator.userActivation?.hasBeenActive) navigator.vibrate?.(8); // Androidのみ(iOS Safariは非対応)
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
@@ -116,7 +123,8 @@ function cards() {
   const name = k => (k === idx.seasons[0].key ? "今季" : k === idx.seasons[1]?.key ? "昨季" : null);
   $("#cards").innerHTML = S.map((s, i) => {
     const b = at(s, round), c = `var(--c${i % 6})`;
-    const head = `<h3>${s.label} <small>${s.lg}${name(s.key) ? " / " + name(s.key) : ""}</small></h3>`;
+    const k = mgrIdx(s, round), mg = s.mgr[k];
+    const head = `<h3><span>${s.label} <small>${s.lg}${name(s.key) ? " / " + name(s.key) : ""}</small></span>${mg ? `<b class="mgr" title="${mg.n}"><i class="dot" style="background:${mgrColor(s, i, k)}"></i>${short(mg.n)}</b>` : ""}</h3>`;
     if (!b) return `<div class="card" style="--c:${c}">${head}<div class="big">—</div><div class="row">未消化の節</div></div>`;
     const diffs = i === 0 ? S.slice(1).map(o => {
       const x = at(o, round);
@@ -144,10 +152,18 @@ function moveCursor(ch) {
 }
 const cursor = { id: "cursor", afterLayout: moveCursor, afterDestroy: ch => ch.cur?.remove() };
 
+function mgrLegend() {
+  const rows = S.filter(s => s.mgr.length > 1).map((s, _) => {
+    const i = S.indexOf(s);
+    return `<div><b>${s.label}</b> ` + s.mgr.map((m, k) => `<span class="ml"><i class="dot" style="background:${mgrColor(s, i, k)}"></i>${short(m.n)} ${m.r}節〜</span>`).join(" ") + "</div>";
+  });
+  $("#mgrLegend").innerHTML = rows.length ? "<div>線の中心の色＝監督（途中交代あり）</div>" + rows.join("") : "";
+}
+
 function draw() {
   const max = Math.max(1, ...S.map(s => s.rounds));
   const labels = Array.from({ length: max }, (_, i) => i + 1);
-  for (const [id, f] of [["chPts", "points"], ["chGd", $("#metric").value]]) {
+  for (const [id, f] of [["chPts", $("#metric").value]]) {
     charts[id]?.destroy();
     const grid = css("--line"), fg = css("--muted");
     charts[id] = new Chart($("#" + id), {
@@ -155,12 +171,15 @@ function draw() {
       plugins: [cursor],
       data: {
         labels,
-        datasets: S.map((s, i) => ({
-          label: `${s.label}（${s.lg}）`,
-          data: labels.map(r => at(s, r)?.[f] ?? null),
-          borderColor: css(`--c${i % 6}`), backgroundColor: css(`--c${i % 6}`),
-          borderWidth: i === 0 ? 3 : 2, pointRadius: 0, pointHoverRadius: 4, tension: 0,
-        })),
+        datasets: S.flatMap((s, i) => {
+          const data = labels.map(r => at(s, r)?.[f] ?? null), col = css(`--c${i % 6}`), l = `${s.label}（${s.lg}）`;
+          const base = { data, pointRadius: 0, pointHoverRadius: 0, tension: 0 };
+          return [
+            { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 6 : 5, pointHoverRadius: 4, order: 1 }, // 外側=シーズン色
+            { ...base, label: "", borderColor: col, borderWidth: 3, order: 0, // 中心=監督色(監督ごとに区間の色を変える)
+              segment: { borderColor: c => mgrColor(s, i, mgrIdx(s, c.p1DataIndex + 1)) } },
+          ];
+        }),
       },
       options: {
         animation: false, maintainAspectRatio: false,
@@ -169,7 +188,10 @@ function draw() {
           x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
           y: { ticks: { color: fg }, grid: { color: c => (f === "gd" && c.tick.value === 0 ? "#dc2626" : grid), lineWidth: c => (f === "gd" && c.tick.value === 0 ? 2 : 1) } },
         },
-        plugins: { legend: { labels: { color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } } },
+        plugins: {
+          legend: { onClick: () => {}, labels: { filter: it => it.text, color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } },
+          tooltip: { filter: it => it.dataset.label },
+        },
       },
     });
     bind($("#" + id));

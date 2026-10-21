@@ -90,3 +90,9 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .cur { position: absolute; left: -1px; width: 2px; background: var(--muted); opacity: .8; pointer-events: none; z-index: 1; will-change: transform; }
 summary { justify-content: space-between; gap: 8px; }
 summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space: nowrap; }
+.card h3 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 6px; }
+.mgr { font-weight: 700; font-size: .8rem; white-space: nowrap; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 3px; border: 1px solid var(--line); vertical-align: baseline; }
+#mgrLegend { font-size: .65rem; color: var(--muted); line-height: 1.5; }
+#mgrLegend .ml { white-space: nowrap; margin-right: 6px; }
+.box { height: 340px; }

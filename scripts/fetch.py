@@ -46,11 +46,77 @@ def fetch_rows(season, league):
             team.append(nm)
         sc = re.search(r"(\d+)-(\d+)", re.sub(r"<[^>]*>", "", cells[i]))
         rows.append({"r": int(unicodedata.normalize("NFKC", m.group(1))), "date": f"20{d[1]}-{d[2]}-{d[3]}",
-                     "h": team[0], "a": team[1], "gh": int(sc[1]) if sc else None, "ga": int(sc[2]) if sc else None})
+                     "h": team[0], "a": team[1], "gh": int(sc[1]) if sc else None, "ga": int(sc[2]) if sc else None,
+                     "id": (re.search(r"match_card_id=(\d+)", cells[i]) or [None, None])[1]})
     for x in rows:
         for k in "ha":
             x[k] = (slug.get(x[k], x[k]), x[k])
     return rows
+
+
+CARD = "https://data.j-league.or.jp/SFMS02/?match_card_id={}"
+CARDS = {}
+
+
+def fmt(n):
+    n = n.strip()
+    return re.sub(r"[ 　]+", "・", n) if re.fullmatch(r"[゠-ヿー・ 　]+", n) else re.sub(r"[ 　]+", "", n)
+
+
+def card_mgr(mid, home):
+    """試合記録ページ -> その試合のホーム/アウェイ監督名。"""
+    if mid not in CARDS:
+        time.sleep(1)
+        req = urllib.request.Request(CARD.format(mid), headers={"User-Agent": "jleague-compare/1.0 (personal project)"})
+        html = urllib.request.urlopen(req, timeout=60).read().decode("utf-8")
+        blocks = re.findall(r"監督情報エリア　Start(.*?)監督情報エリア　End", html, re.S)  # 監督欄が空の試合もある
+        if len(blocks) != 2:
+            raise ValueError(f"監督欄を取得できない: {mid}")
+        CARDS[mid] = [fmt((re.search(r'<td class="name">\s*([^<]*?)\s*</td>', b) or [0, ""])[1]) for b in blocks]
+    return CARDS[mid][0 if home else 1]
+
+
+def attach_managers(d, rows, prev):
+    """各クラブの監督の変遷 mgr=[{r:その監督の最初の節, n:名前}] を付ける。
+    全試合は引かず、確認済みの最後の試合と最新試合を比べ、違えば二分探索で交代点を探す(1試合=1リクエスト)。
+    失敗しても点数データは更新したいので、クラブ単位で握りつぶして前回値を残す。"""
+    games = {}
+    for x in sorted(rows, key=lambda x: (x["date"], x["r"])):
+        if x["gh"] is not None and x["id"]:
+            games.setdefault(x["h"][0], []).append((x["r"], x["id"], True))
+            games.setdefault(x["a"][0], []).append((x["r"], x["id"], False))
+    for tid, g in games.items():
+        old = ((prev or {}).get("teams") or {}).get(tid, {})
+        mgr, thru = [dict(m) for m in old.get("mgr", [])], old.get("mgrThru", 0)
+
+        def at(i):  # 監督欄が空の試合は隣の試合で代用
+            for k in (0, -1, 1, -2, 2):
+                if 0 <= i + k < len(g) and (n := card_mgr(g[i + k][1], g[i + k][2])):
+                    return n
+            raise ValueError("監督名が取れない")
+
+        def seg(lo, mlo, hi, mhi):
+            if mlo == mhi:
+                return
+            if hi - lo == 1:
+                mgr.append({"r": g[hi][0], "n": mhi})
+                return
+            mid = (lo + hi) // 2
+            mm = at(mid)
+            seg(lo, mlo, mid, mm)
+            seg(mid, mm, hi, mhi)
+
+        try:
+            if not mgr:
+                mgr, thru = [{"r": 1, "n": at(0)}], 1
+            if len(g) > thru:
+                seg(thru - 1, mgr[-1]["n"], len(g) - 1, at(len(g) - 1))
+                thru = len(g)
+        except Exception as e:
+            print(f"warn: 監督取得失敗 {d['key']} {d['league']} {tid}: {e}", file=sys.stderr)
+            mgr, thru = [dict(m) for m in old.get("mgr", [])], old.get("mgrThru", 0)
+        if mgr:
+            d["teams"][tid]["mgr"], d["teams"][tid]["mgrThru"] = mgr, thru
 
 
 def build(rows, season, league):
@@ -126,16 +192,20 @@ def main():
     for p in glob.glob(os.path.join(DATA, "*.json")):  # サンプルデータ掃除
         if '"sample":true' in open(p, encoding="utf-8").read(200):
             os.remove(p)
-    results = []
+    changed = False
     for s in seasons:
+        results = []
         for name in FRAME:
-            if results:
-                time.sleep(2)  # 公式サイトに優しく
+            time.sleep(2)  # 公式サイトに優しく
             rows = fetch_rows(s, name)
             if not rows:
                 sys.exit(f"{name} {s}: 試合が0件。シーズン指定/サイト構造を確認")
-            results.append(build(rows, s, name))
-    print("changed" if write_all(results) else "no change")
+            d = build(rows, s, name)
+            p = os.path.join(DATA, f"{s}_{name}.json")
+            attach_managers(d, rows, json.load(open(p, encoding="utf-8")) if os.path.exists(p) else None)
+            results.append(d)
+        changed |= write_all(results)  # シーズンごとに保存(長い一括取得の途中失敗に備える)
+    print("changed" if changed else "no change")
 
 
 if __name__ == "__main__":

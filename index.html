@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jリーグ 節ごと比較</title>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <main>
@@ -22,8 +22,7 @@
 
   <section id="cards" class="cards" aria-live="polite"></section>
 
-  <section class="chart"><h2>累積勝ち点</h2><div class="box"><canvas id="chPts"></canvas></div></section>
-  <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select></h2><div class="box"><canvas id="chGd"></canvas></div></section>
+  <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="points">勝ち点</option><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select></h2><div class="box"><canvas id="chPts"></canvas></div><div id="mgrLegend"></div></section>
 
   <section class="slider">
     <div class="pad" id="pad"><span class="thumb"></span><label>第<output id="roundOut">1</output>節時点 <small>◀ ここを横にドラッグ ▶</small></label></div>
@@ -33,6 +32,6 @@
   <p class="note">※ 勝ち点は勝3・分1・敗0。「第N節時点」は第1〜N節の試合のうち消化済みのみ集計します。延期試合は未消化の間その節に計上せず、消化後に本来の節へ計上します（未消化がある節は「未消化あり」と表示）。J1/J2のリーグ戦のみ。最終更新: <span id="updated">-</span>。2026年の百年構想リーグは除外。操作: グラフ上でホイール / 横スワイプ、キーボード ←→。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>
