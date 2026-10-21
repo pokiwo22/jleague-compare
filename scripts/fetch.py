@@ -149,17 +149,19 @@ def fetch_table(season, cid, n):
 
 
 def apply_official(d, season, league, prev):
-    """byRound を公式の節別順位表で置き換える(順位つき)。確定済みの古い節は前回値を再利用。"""
-    cid, through, tables, known = comp_id(season, league), d["through"], {}, {}
-    ids = set(d["teams"])
+    """各節の「延期・未消化の試合数」だけ公式の節別順位表から取る(数値自体は延期試合も本来の節に数える)。
+    pending = n - (公式の第n節終了時点の試合数)。確定済みの古い節は前回値を再利用。"""
+    cid, through, known, ids = comp_id(season, league), d["through"], {}, set(d["teams"])
+    pt = (prev or {}).get("teams") or {}
+    reuse = bool(prev) and (prev.get("pendSrc") == "official" or all("rank" in b for t in pt.values() for b in t["byRound"]))
     for n in range(1, through + 1):
-        old = [(tid, t["byRound"][n - 1]) for tid, t in ((prev or {}).get("teams") or {}).items() if len(t["byRound"]) >= n]
-        if n < through - 1 and old and all("rank" in b for _, b in old):
-            tables[n] = {tid: b for tid, b in old}
+        if reuse and n < through - 1 and all(len(t["byRound"]) >= n for t in pt.values()) and set(pt) == ids:
+            for tid, t in d["teams"].items():
+                t["byRound"][n - 1]["pending"] = pt[tid]["byRound"][n - 1]["pending"]
             continue
         time.sleep(0.7)
-        rows, m, todo = fetch_table(season, cid, n), {}, []
-        for r in rows:
+        m, todo = {}, []
+        for r in fetch_table(season, cid, n):
             key = r["slug"] or r["name"]
             tid = key if key in ids else known.get(key) or next((i for i in ids if not i.isascii() and i in r["name"]), None)
             if tid is None:
@@ -174,12 +176,9 @@ def apply_official(d, season, league, prev):
             m[tid] = todo.pop()
         if todo or set(m) != ids:
             raise ValueError(f"{season} {league} 第{n}節: クラブを対応付けできない {[r['name'] for r in todo]}")
-        m = {tid: {"round": n, "played": r["played"], "points": r["points"], "w": r["w"], "d": r["d"], "l": r["l"],
-                   "gf": r["gf"], "ga": r["ga"], "gd": r["gd"], "pending": max(0, n - r["played"]), "rank": r["rank"]}
-             for tid, r in m.items()}
-        tables[n] = m
-    for tid, t in d["teams"].items():
-        t["byRound"] = [tables[n][tid] for n in range(1, through + 1)]
+        for tid, r in m.items():
+            d["teams"][tid]["byRound"][n - 1]["pending"] = max(0, n - r["played"])
+    d["pendSrc"] = "official"
 
 
 def build(rows, season, league):

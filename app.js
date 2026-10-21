@@ -96,10 +96,13 @@ const mgrIdx = (s, r) => s.mgr.reduce((k, m, j) => (m.r <= r ? j : k), 0);
 const mgrColor = (s, i, k) => (k === 0 ? css(`--c${i % 6}`) : PAL[(k - 1) % PAL.length]);
 const short = n => (n.includes("・") ? n.split("・").pop() : n);
 
-// 順位: 公式の節別順位表の値(勝点>得失点>総得点の順位決定済み)
+// 順位: 勝点 > 得失点 > 総得点(Jリーグ順位決定順)。その節時点の累積で比較
 const rank = (s, r) => {
   const m = at(s, r);
-  return m?.rank ? { n: m.rank, of: Object.keys(s.all).length } : null;
+  if (!m) return null;
+  const L = Object.values(s.all).map(t => t.byRound[r - 1]);
+  const better = b => b.points > m.points || (b.points === m.points && (b.gd > m.gd || (b.gd === m.gd && b.gf > m.gf)));
+  return { n: L.filter(better).length + 1, of: L.length };
 };
 
 const at = (s, r) => (r <= s.through ? s.by[r - 1] : null);
@@ -131,7 +134,7 @@ function cards() {
       <div class="big">${b.points}<span class="row"> 勝点</span> <span class="rank">${rank(s, round) ? `${rank(s, round).n}位<span class="row">/${rank(s, round).of}</span>` : ""}</span></div>
       <div class="row">得失点 <b class="${cls(b.gd)}">${signed(b.gd)}</b>（${b.gf}-${b.ga}）</div>
       <div class="row">${b.w}勝 ${b.d}分 ${b.l}敗（${b.played}試合）</div>
-      ${b.pending ? `<div class="tag">未消化あり（${b.pending}試合）</div>` : ""}
+      ${b.pending ? `<div class="tag">延期あり（${b.pending}試合は後日消化）</div>` : ""}
       ${diffs ? `<div class="diff">${diffs}</div>` : ""}</div>`;
   }).join("");
 }

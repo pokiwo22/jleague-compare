@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jリーグ 節ごと比較</title>
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
 <main>
@@ -29,9 +29,9 @@
     <input type="range" id="round" min="1" max="38" value="1" hidden>
   </section>
 
-  <p class="note">※ 勝ち点は勝3・分1・敗0。数値・順位は、Jリーグ公式の「第N節終了時点の順位表」と同じ集計です。延期になった試合は、消化されるまでその時点の数値に入りません（未消化の試合がある節は「未消化あり」と表示）。J1/J2のリーグ戦のみ。2026年の百年構想リーグは除外。最終更新: <span id="updated">-</span>。操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
+  <p class="note">※ 勝ち点は勝3・分1・敗0。「第N節時点」は第1〜N節に属する試合の累積で、延期になった試合も本来の節に数えます（その節の時点で延期中だった試合がある場合は「延期あり」と表示）。順位は勝点→得失点→総得点の順で算出。J1/J2のリーグ戦のみ。2026年の百年構想リーグは除外。最終更新: <span id="updated">-</span>。操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>
