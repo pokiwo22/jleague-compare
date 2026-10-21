@@ -105,8 +105,7 @@ function cards() {
       return x ? `<div>${name(o.key) || o.label}比 <span class="${cls(b.points - x.points)}">勝点 ${signed(b.points - x.points)}</span> / <span class="${cls(b.gd - x.gd)}">得失 ${signed(b.gd - x.gd)}</span></div>` : "";
     }).join("") : "";
     return `<div class="card" style="--c:${c}">${head}
-      <div class="big">${b.points}<span class="row"> 勝点</span></div>
-      <div class="rank">${rank(s, round).n}位<span class="row">（${rank(s, round).of}チーム中）</span></div>
+      <div class="big">${b.points}<span class="row"> 勝点</span> <span class="rank">${rank(s, round).n}位<span class="row">/${rank(s, round).of}</span></span></div>
       <div class="row">得失点 <b class="${cls(b.gd)}">${signed(b.gd)}</b>（${b.gf}-${b.ga}）</div>
       <div class="row">${b.w}勝 ${b.d}分 ${b.l}敗（${b.played}試合）</div>
       ${b.pending ? `<div class="tag">未消化あり（${b.pending}試合）</div>` : ""}
@@ -145,10 +144,10 @@ function draw() {
         animation: false, maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         scales: {
-          x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
+          x: { ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
           y: { ticks: { color: fg }, grid: { color: c => (f === "gd" && c.tick.value === 0 ? "#dc2626" : grid), lineWidth: c => (f === "gd" && c.tick.value === 0 ? 2 : 1) } },
         },
-        plugins: { legend: { labels: { color: css("--fg") } } },
+        plugins: { legend: { display: id === "chPts", labels: { color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } } },
       },
     });
     bind($("#" + id));

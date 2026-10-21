@@ -45,3 +45,25 @@ summary { color: var(--muted); cursor: pointer; min-height: 28px; display: flex;
 .box { position: relative; height: 280px; }
 canvas { touch-action: pan-y; }
 h2 select { font-size: .95rem; padding: 4px 8px; margin-left: 4px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+h1 { font-size: 1.05rem; }
+main { padding: 10px 12px; }
+.controls { margin: 6px 0; gap: 8px; }
+.controls label { font-size: .7rem; flex: 1 1 120px; }
+.controls select { padding: 6px 8px; font-size: .95rem; }
+details { margin-bottom: 6px; }
+.cards { gap: 6px; margin-bottom: 6px; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); }
+.card { padding: 6px 8px; }
+.card h3 { font-size: .8rem; }
+.card .big { font-size: 1.25rem; }
+.card .row { font-size: .75rem; }
+.card .rank { font-size: .85rem; }
+.card .diff { font-size: .7rem; margin-top: 3px; padding-top: 2px; }
+.chart { margin-bottom: 4px; }
+h2 { font-size: .85rem; margin: 0 0 2px; }
+.box { height: clamp(120px, 21dvh, 230px); }
+.slider { margin: 0 0 4px; padding: 2px 0; }
+.slider { display: flex; align-items: center; gap: 10px; }
+.slider label { white-space: nowrap; font-size: .85rem; }
+.slider input { flex: 1; }
+.box { height: clamp(110px, 19dvh, 230px); }
