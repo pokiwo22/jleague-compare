@@ -58,10 +58,11 @@ async function refresh() {
     };
     box.append(l);
   }
+  $("#seasonsSum").textContent = "比較シーズン: " + (idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club)).map(s => s.label).join(" / ") || "未選択");
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
-    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound };
+    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams };
   }))).filter(Boolean);
   const max = Math.max(1, ...S.map(s => s.rounds));
   $("#round").max = max;
@@ -70,10 +71,21 @@ async function refresh() {
   draw();
 }
 
+// 順位: 勝点 > 得失点 > 総得点(Jリーグ順位決定順)。その節時点の累積で比較
+const rank = (s, r) => {
+  const m = at(s, r);
+  if (!m) return null;
+  const L = Object.values(s.all).map(t => t.byRound[r - 1]);
+  const better = b => b.points > m.points || (b.points === m.points && (b.gd > m.gd || (b.gd === m.gd && b.gf > m.gf)));
+  return { n: L.filter(better).length + 1, of: L.length };
+};
+
 const at = (s, r) => (r <= s.through ? s.by[r - 1] : null);
 
 function setRound(r) {
+  const prev = round;
   round = Math.min(+$("#round").max, Math.max(1, r));
+  if (round !== prev) navigator.vibrate?.(8); // Androidのみ(iOS Safariは非対応)
   $("#round").value = round;
   $("#roundOut").textContent = round;
   const q = new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value });
@@ -94,6 +106,7 @@ function cards() {
     }).join("") : "";
     return `<div class="card" style="--c:${c}">${head}
       <div class="big">${b.points}<span class="row"> 勝点</span></div>
+      <div class="rank">${rank(s, round).n}位<span class="row">（${rank(s, round).of}チーム中）</span></div>
       <div class="row">得失点 <b class="${cls(b.gd)}">${signed(b.gd)}</b>（${b.gf}-${b.ga}）</div>
       <div class="row">${b.w}勝 ${b.d}分 ${b.l}敗（${b.played}試合）</div>
       ${b.pending ? `<div class="tag">未消化あり（${b.pending}試合）</div>` : ""}
@@ -132,8 +145,8 @@ function draw() {
         animation: false, maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         scales: {
-          x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, maxTicksLimit: 12 }, grid: { color: grid } },
-          y: { ticks: { color: fg }, grid: { color: grid } },
+          x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
+          y: { ticks: { color: fg }, grid: { color: c => (f === "gd" && c.tick.value === 0 ? "#dc2626" : grid), lineWidth: c => (f === "gd" && c.tick.value === 0 ? 2 : 1) } },
         },
         plugins: { legend: { labels: { color: css("--fg") } } },
       },
