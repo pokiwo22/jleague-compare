@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>【試作・ブロック】Jリーグ 節ごと比較</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="style.css?v=b17">
+<link rel="stylesheet" href="style.css?v=b19">
 </head>
 <body>
 <main>
@@ -24,7 +24,7 @@
   <section id="cards" class="cards" aria-live="polite"></section>
 
   <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="points">勝ち点</option><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select></h2><div class="box"><canvas id="chPts"></canvas></div><div id="mgrLegend"></div>
-    <div id="zoomCtl" class="refs"><span>順位の見方:</span><label><input type="radio" name="zrk" value="at">対戦時点</label><label><input type="radio" name="zrk" value="final">最終順位</label></div>
+    <div id="zoomCtl" class="refs"><span>対戦相手の順位:</span><label><input type="radio" name="zrk" value="at">対戦時点</label><label><input type="radio" name="zrk" value="final">最終順位</label></div>
     <div id="strips"></div></section>
 
   <details id="tierBox" open><summary><span>順位帯ごとの成績（試作）</span><span class="hint">▼ タップ or クリック</span></summary>
@@ -39,7 +39,8 @@
 
   <p class="note">※ 勝ち点は勝3・分1・敗0。「第N節時点」は第1〜N節に属する試合の累積で、延期になった試合も本来の節に数えます（その節の時点で延期中だった試合がある場合は「延期あり」と表示）。順位は勝点→得失点→総得点の順で算出。J1/J2のリーグ戦のみ。2026年の百年構想リーグは除外。最終更新: <span id="updated">-</span>。<br>データ出典: <a href="https://data.j-league.or.jp/SFTP01/" target="_blank" rel="noopener noreferrer">Jリーグ データサイト</a>の公開情報をもとに集計した、非公式の個人制作サイトです。Jリーグおよび各クラブとは関係ありません。ロゴ・エンブレム・写真・映像は使用していません。<br>操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
+<canvas id="mini" aria-hidden="true"></canvas>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=b17"></script>
+<script src="app.js?v=b19"></script>
 </body>
 </html>
