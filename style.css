@@ -104,3 +104,9 @@ summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space:
 .refs label { display: flex; align-items: center; gap: 3px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--fg); cursor: pointer; min-height: 28px; }
 #paceLegend { font-size: .65rem; color: var(--muted); line-height: 1.6; }
 #paceLegend svg { vertical-align: middle; margin-right: 3px; }
+#refs { font-size: .67rem; margin-bottom: 4px; }
+#refs .rg { margin: 2px 0; }
+#refs label { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--fg); cursor: pointer; min-height: 28px; }
+#refs .sub { margin: 3px 0 5px 14px; padding-left: 8px; border-left: 2px solid var(--line); }
+#refs .row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 5px; margin: 2px 0; color: var(--muted); }
+#refs .row2 b { min-width: 3.4em; font-weight: 600; }
