@@ -131,3 +131,8 @@ summary .hint { background: var(--accent); color: #fff; opacity: 1; font-size: .
 details { background: var(--tint); border-color: var(--tint-line); }
 summary .hint { background: var(--badge); color: var(--fg); border: 1px solid var(--tint-line); }
 details > .controls { margin: 8px 0 6px; }
+
+/* ペース比較: 開いたら中身は明るい背景に。見出し(summary)だけ濃い色のまま */
+#paceBox[open] { background: var(--bg); padding-top: 0; }
+#paceBox > summary { margin: 0 -8px; padding: 6px 8px; background: var(--tint); border-radius: 5px; }
+#paceBox[open] > summary { border-radius: 5px 5px 0 0; border-bottom: 1px solid var(--tint-line); margin-bottom: 6px; }
