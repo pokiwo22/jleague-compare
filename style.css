@@ -191,3 +191,10 @@ details > .controls { margin: 8px 0 6px; }
 .sq { box-shadow: inset 0 3px 0 #fff; }
 .sq.a { box-shadow: inset 0 3px 0 #000; }
 .sq.now { transform: none; outline: 2px solid var(--fg); outline-offset: 1px; z-index: 2; position: relative; }
+
+/* ホーム/アウェイ: 上の線をやめて、右下に白い小さな文字 H / A */
+.sq, .sq.a { box-shadow: none; position: relative; }
+.sq::after { position: absolute; right: 1px; bottom: 0; font-size: 6px; font-weight: 700; line-height: 1; color: #fff; text-shadow: 0 0 1px rgba(0, 0, 0, .75), 0 0 1px rgba(0, 0, 0, .75); }
+.sq.h::after { content: "H"; }
+.sq.a::after { content: "A"; }
+.sq { padding-bottom: 3px; box-sizing: border-box; } /* 数字を少し上へ(右下のH/Aと重ならないように) */
