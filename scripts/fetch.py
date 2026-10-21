@@ -119,6 +119,69 @@ def attach_managers(d, rows, prev):
             d["teams"][tid]["mgr"], d["teams"][tid]["mgrThru"] = mgr, thru
 
 
+SRT = "https://data.j-league.or.jp/SFRT01/"
+
+
+def get(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "jleague-compare/1.0 (personal project)"})
+    return urllib.request.urlopen(req, timeout=60).read().decode("utf-8")
+
+
+def comp_id(season, league):
+    pat = "Ｊ１リーグ" if league == "J1" else "Ｊ２リーグ"
+    opts = re.findall(r'<option value="(\d+)"[^>]*>([^<]*)', get(SRT + f"?yearId={season}"))
+    return next(v for v, t in opts if t.strip().endswith(pat) and "昇格" not in t and "入" not in t)
+
+
+def fetch_table(season, cid, n):
+    """公式の「第n節終了時点の順位表」。延期試合は消化されるまで加算されない(公式の定義そのまま)。"""
+    html = get(SRT + f"search?yearId={season}&competitionId={cid}&competitionSectionId={n}")
+    out = []
+    for tr in html.split("<tr")[1:]:
+        if "icon-graph" not in tr:
+            continue
+        c = [re.sub(r"<[^>]*>|&nbsp;|\s", "", x) for x in re.split(r"<td[^>]*>", tr)[1:]]  # 位置固定: [グラフ,順位,名前,勝点,試合,勝,分,敗,得点,失点,差]
+        sl = re.search(r"club/(\w+)/profile", tr)
+        v = [int(unicodedata.normalize("NFKC", x).replace("+", "").replace("−", "-")) for x in c[3:11]]
+        out.append({"slug": sl[1] if sl else None, "name": c[2], "rank": int(c[1]) if c[1].isdigit() else None,  # 未消化クラブは順位欄が空
+                    "points": v[0], "played": v[1], "w": v[2], "d": v[3], "l": v[4], "gf": v[5], "ga": v[6], "gd": v[7]})
+    return out
+
+
+def apply_official(d, season, league, prev):
+    """byRound を公式の節別順位表で置き換える(順位つき)。確定済みの古い節は前回値を再利用。"""
+    cid, through, tables, known = comp_id(season, league), d["through"], {}, {}
+    ids = set(d["teams"])
+    for n in range(1, through + 1):
+        old = [(tid, t["byRound"][n - 1]) for tid, t in ((prev or {}).get("teams") or {}).items() if len(t["byRound"]) >= n]
+        if n < through - 1 and old and all("rank" in b for _, b in old):
+            tables[n] = {tid: b for tid, b in old}
+            continue
+        time.sleep(0.7)
+        rows, m, todo = fetch_table(season, cid, n), {}, []
+        for r in rows:
+            key = r["slug"] or r["name"]
+            tid = key if key in ids else known.get(key) or next((i for i in ids if not i.isascii() and i in r["name"]), None)
+            if tid is None:
+                todo.append(r)
+                continue
+            known[key] = tid
+            m[tid] = r
+        left = ids - set(m)  # リンク無し等で対応付けできなかった1クラブは、残った1クラブと対応させる
+        if len(todo) == 1 and len(left) == 1:
+            tid = left.pop()
+            known[todo[0]["slug"] or todo[0]["name"]] = tid
+            m[tid] = todo.pop()
+        if todo or set(m) != ids:
+            raise ValueError(f"{season} {league} 第{n}節: クラブを対応付けできない {[r['name'] for r in todo]}")
+        m = {tid: {"round": n, "played": r["played"], "points": r["points"], "w": r["w"], "d": r["d"], "l": r["l"],
+                   "gf": r["gf"], "ga": r["ga"], "gd": r["gd"], "pending": max(0, n - r["played"]), "rank": r["rank"]}
+             for tid, r in m.items()}
+        tables[n] = m
+    for tid, t in d["teams"].items():
+        t["byRound"] = [tables[n][tid] for n in range(1, through + 1)]
+
+
 def build(rows, season, league):
     """試合rows -> 保存用dict。未消化かつ日付が過去のものを pending とする。"""
     today = datetime.now().strftime("%Y-%m-%d")
@@ -202,7 +265,9 @@ def main():
                 sys.exit(f"{name} {s}: 試合が0件。シーズン指定/サイト構造を確認")
             d = build(rows, s, name)
             p = os.path.join(DATA, f"{s}_{name}.json")
-            attach_managers(d, rows, json.load(open(p, encoding="utf-8")) if os.path.exists(p) else None)
+            prev = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else None
+            apply_official(d, s, name, prev)
+            attach_managers(d, rows, prev)
             results.append(d)
         changed |= write_all(results)  # シーズンごとに保存(長い一括取得の途中失敗に備える)
     print("changed" if changed else "no change")
