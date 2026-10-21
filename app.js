@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(), paceOff = new Set(), indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -52,6 +52,11 @@ async function init() {
   $("#metric").onchange = () => { draw(); setRound(round); };
   if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(Boolean));
   indOn = new Set((q.get("ind") || "").split(",").filter(Boolean));
+  rkMode = q.get("rk") === "final" ? "final" : "at";
+  document.querySelectorAll('#matchCtl input[name="rk"]').forEach(i => {
+    i.checked = i.value === rkMode;
+    i.onchange = () => { rkMode = i.value; renderMatches(); setRound(round); };
+  });
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
   $("#paceBox").ontoggle = () => drawPace();
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
@@ -127,7 +132,7 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}) })), 250);
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(rkMode === "final" ? { rk: "final" } : {}) })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
   dimMatches();
@@ -177,17 +182,20 @@ const rankMap = (s, n) => { // 第n節終了時点の順位(勝点→得失点�
 };
 
 function renderMatches() {
+  const fin = rkMode === "final";
   const html = S.map((s, i) => {
     if (!s.matches.length) return `<div class="mrow"><h4>${s.label}</h4><div class="note2">この試作データには試合の記録がありません。</div></div>`;
     const q = s.matches.map(([r, opp, home, gf, ga]) => {
       const res = gf > ga ? "w" : gf < ga ? "l" : "d", jp = { w: "勝ち", d: "分け", l: "負け" }[res];
-      const rk = r > MIN_RANK_ROUND - 1 ? rankMap(s, r - 1)[opp] : null;
+      const rk = fin ? rankMap(s, s.through)[opp] : r >= MIN_RANK_ROUND ? rankMap(s, r - 1)[opp] : null;
+      const when = fin ? (s.through === s.rounds ? "最終" : "現時点") : "その時";
       const nm = s.all[opp]?.name ?? opp;
-      return `<div class="mq ${res} ${home ? "" : "a"}" data-r="${r}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${gf}-${ga} ${jp}${rk ? `（相手はその時${rk}位）` : ""}"><b>${rk ?? "—"}</b><small>${r}節</small></div>`;
+      return `<div class="mq ${res} ${home ? "" : "a"}" data-r="${r}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${gf}-${ga} ${jp}${rk ? `（相手は${when}${rk}位）` : ""}"><b>${rk ?? "—"}</b><small>${r}節</small></div>`;
     }).join("");
     return `<div class="mrow"><h4>${s.label}（${s.lg}）</h4><div class="mgrid">${q}</div></div>`;
   }).join("");
-  $("#matchBody").innerHTML = html + `<div class="note2">数字＝相手の、その試合の<b>直前</b>の順位（1〜3節は—）／ <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 下線つき＝アウェイ ／ 薄い＝選んだ節より先</div>`;
+  const what = fin ? "数字＝相手の<b>最終順位</b>（今季など未確定のシーズンは<b>現時点</b>の順位）" : "数字＝相手の、その試合の<b>直前</b>の順位（1〜3節は—）";
+  $("#matchBody").innerHTML = html + `<div class="note2">${what}／ <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 下線つき＝アウェイ ／ 薄い＝選んだ節より先</div>`;
   dimMatches();
 }
 
