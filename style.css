@@ -96,3 +96,5 @@ summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space:
 #mgrLegend { font-size: .65rem; color: var(--muted); line-height: 1.5; }
 #mgrLegend .ml { white-space: nowrap; margin-right: 6px; }
 .box { height: 340px; }
+.card h3 { display: block; }
+.mgr { display: block; margin-top: 1px; }

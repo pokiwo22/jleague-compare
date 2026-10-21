@@ -175,8 +175,8 @@ function draw() {
           const data = labels.map(r => at(s, r)?.[f] ?? null), col = css(`--c${i % 6}`), l = `${s.label}（${s.lg}）`;
           const base = { data, pointRadius: 0, pointHoverRadius: 0, tension: 0 };
           return [
-            { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 6 : 5, pointHoverRadius: 4, order: 1 }, // 外側=シーズン色
-            { ...base, label: "", borderColor: col, borderWidth: 3, order: 0, // 中心=監督色(監督ごとに区間の色を変える)
+            { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 3 : 2.5, pointHoverRadius: 4, order: 1 }, // 外側=シーズン色
+            { ...base, label: "", borderColor: col, borderWidth: 1.5, order: 0, // 中心=監督色(監督ごとに区間の色を変える)
               segment: { borderColor: c => mgrColor(s, i, mgrIdx(s, c.p1DataIndex + 1)) } },
           ];
         }),
