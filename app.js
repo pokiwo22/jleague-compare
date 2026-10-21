@@ -190,17 +190,19 @@ function renderMatches() {
       const rk = fin ? rankMap(s, s.through)[opp] : r >= MIN_RANK_ROUND ? rankMap(s, r - 1)[opp] : null;
       const when = fin ? (s.through === s.rounds ? "最終" : "現時点") : "その時";
       const nm = s.all[opp]?.name ?? opp;
-      return `<div class="mq ${res} ${home ? "" : "a"}" data-r="${r}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${gf}-${ga} ${jp}${rk ? `（相手は${when}${rk}位）` : ""}"><b>${rk ?? "—"}</b><small>${r}節</small></div>`;
+      return `<div class="mq ${res} ${home ? "" : "a"}" data-r="${r}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${gf}-${ga} ${jp}${rk ? `（相手は${when}${rk}位）` : ""}"><b>${rk ?? "—"}</b></div>`;
     }).join("");
-    return `<div class="mrow"><h4>${s.label}（${s.lg}）</h4><div class="mgrid">${q}</div></div>`;
+    const ticks = Array.from({ length: s.rounds }, (_, k) => k + 1).filter(r => r === 1 || r % 5 === 0)
+      .map(r => `<span style="left:${((r - 0.5) / s.rounds) * 100}%">${r}</span>`).join("");
+    return `<div class="mrow"><h4>${s.label}（${s.lg}）</h4><div class="mgrid" style="--n:${s.rounds}">${q}</div><div class="maxis">${ticks}</div></div>`;
   }).join("");
   const what = fin ? "数字＝相手の<b>最終順位</b>（今季など未確定のシーズンは<b>現時点</b>の順位）" : "数字＝相手の、その試合の<b>直前</b>の順位（1〜3節は—）";
-  $("#matchBody").innerHTML = html + `<div class="note2">${what}／ <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 下線つき＝アウェイ ／ 薄い＝選んだ節より先</div>`;
+  $("#matchBody").innerHTML = html + `<div class="note2">${what}／ <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 下線つき＝アウェイ ／ 薄い＝選んだ節より先 ／ <b>大きいマス</b>＝選んだ節</div>`;
   dimMatches();
 }
 
 function dimMatches() {
-  document.querySelectorAll("#matchBody .mq").forEach(e => e.classList.toggle("dim", +e.dataset.r > round));
+  document.querySelectorAll("#matchBody .mq").forEach(e => { e.classList.toggle("dim", +e.dataset.r > round); e.classList.toggle("cur", +e.dataset.r === round); });
 }
 
 function mgrLegend() {

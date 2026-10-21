@@ -158,3 +158,13 @@ details > .controls { margin: 8px 0 6px; }
 .mq.dim { opacity: .28; }
 .lg { color: #fff; padding: 1px 6px; border-radius: 4px; font-size: .62rem; }
 .note2 { font-size: .65rem; color: var(--muted); line-height: 1.7; margin-top: 6px; }
+
+/* 横1列: 1シーズン=全節ぶんの幅で等分。数字は小さく、色で結果を表す */
+.mgrid { display: flex; flex-wrap: nowrap; gap: 1px; padding: 6px 0 2px; }
+.mq { flex: 0 0 calc((100% - var(--n) * 1px) / var(--n)); width: auto; height: 24px; border-radius: 2px; position: relative; }
+.mq b { font-size: min(11px, calc((min(100vw, 960px) - 60px) / var(--n) * .72)); font-weight: 600; letter-spacing: 0; line-height: 1; }
+.mq.d, .lg.d { background: #facc15; color: #1c1917; }
+.mq.a { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .4); }
+.mq.cur { transform: scale(1.7); z-index: 2; outline: 2px solid var(--fg); border-radius: 3px; opacity: 1; }
+.maxis { position: relative; height: 12px; font-size: 8px; color: var(--muted); margin-bottom: 4px; }
+.maxis span { position: absolute; transform: translateX(-50%); }
