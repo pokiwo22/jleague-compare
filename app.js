@@ -22,17 +22,24 @@ async function init() {
   fillClubs();
   $("#league").onchange = () => { fillClubs(true); refresh(); };
   $("#club").onchange = () => { club = $("#club").value; refresh(); };
-  // 左右の1/3エリア: 横ドラッグで相対移動。エリア幅(=画面1/3)分動かすと全節を移動できる
-  for (const pad of [$("#padL"), $("#padR")]) {
-    let x0, r0;
-    pad.onpointerdown = e => { pad.setPointerCapture(e.pointerId); x0 = e.clientX; r0 = round; pad.classList.add("on"); hideTips(); };
-    pad.onpointermove = e => {
-      if (!pad.hasPointerCapture(e.pointerId)) return;
-      const step = pad.clientWidth / Math.max(1, +$("#round").max - 1);
-      setRound(r0 + Math.round((e.clientX - x0) / step));
-    };
-    pad.onpointerup = pad.onpointercancel = () => pad.classList.remove("on");
-  }
+  // 下のパッド: どこを触っても中央にバーが出て、そこから横ドラッグで相対移動。画面幅1/3動かすと全節を移動できる
+  const pad = $("#pad"), th = pad.querySelector(".thumb");
+  let x0, r0, dx, raf;
+  pad.onpointerdown = e => {
+    x0 = e.clientX; r0 = round; dx = 0; th.style.transform = "translateX(0)"; pad.classList.add("on");
+    try { pad.setPointerCapture(e.pointerId); } catch {}
+  };
+  pad.onpointermove = e => {
+    if (!pad.classList.contains("on")) return;
+    dx = e.clientX - x0;
+    raf ||= requestAnimationFrame(() => {
+      raf = 0;
+      const half = pad.clientWidth / 2 - 8;
+      th.style.transform = `translateX(${Math.max(-half, Math.min(half, dx))}px)`;
+      setRound(r0 + Math.round(dx / (innerWidth / 3 / Math.max(1, +$("#round").max - 1))));
+    });
+  };
+  pad.onpointerup = pad.onpointercancel = pad.onlostpointercapture = () => pad.classList.remove("on");
   document.addEventListener("pointerdown", e => { if (e.target.tagName !== "CANVAS") hideTips(); });
   $("#round").onkeydown = e => e.stopPropagation();
   document.onkeydown = e => {
@@ -167,6 +174,7 @@ function draw() {
 
 function hideTips() {
   for (const c of Object.values(charts)) {
+    if (!c.tooltip.getActiveElements().length) continue;
     c.setActiveElements([]);
     c.tooltip.setActiveElements([], { x: 0, y: 0 });
     c.update("none");

@@ -80,3 +80,10 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .pad.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .box { height: 280px; }
 .chart { margin-bottom: 12px; }
+.slider { display: block; }
+.pad { position: relative; width: 100%; height: 56px; flex-direction: column; text-align: center; overflow: hidden; }
+.pad label { font-size: .9rem; font-weight: 600; color: var(--fg); pointer-events: none; }
+.pad small { font-weight: 400; color: var(--muted); font-size: .7rem; }
+.pad.on label, .pad.on small { color: #fff; }
+.thumb { position: absolute; left: calc(50% - 3px); top: 8px; bottom: 8px; width: 6px; border-radius: 3px; background: #fff; opacity: 0; pointer-events: none; }
+.pad.on .thumb { opacity: 1; }
