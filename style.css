@@ -124,3 +124,10 @@ summary .hint { background: var(--accent); color: #fff; opacity: 1; font-size: .
 #paceBox > summary { font-size: .74rem; white-space: nowrap; gap: 6px; }
 #paceBox > summary > span:first-child { overflow: hidden; text-overflow: ellipsis; }
 #paceBox > summary .hint { font-weight: 600; font-size: .62rem; }
+
+/* 開閉ボックス: 背景に近いニュートラルな色で、少し濃く。バッジも同系色 */
+:root { --tint: #ece9e3; --tint-line: #bfb9af; --badge: #d6d1c8; }
+@media (prefers-color-scheme: dark) { :root { --tint: #26221f; --tint-line: #4d4640; --badge: #3d3733; } }
+details { background: var(--tint); border-color: var(--tint-line); }
+summary .hint { background: var(--badge); color: var(--fg); border: 1px solid var(--tint-line); }
+details > .controls { margin: 8px 0 6px; }

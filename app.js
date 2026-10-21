@@ -87,7 +87,7 @@ async function refresh() {
     };
     box.append(l);
   }
-  $("#seasonsSum").textContent = "比較シーズン: " + (idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club)).map(s => s.label).join(" / ") || "未選択");
+  $("#seasonsSum").textContent = `${idx.teams[club]}（${$("#league").value}） ｜ ` + (idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club)).map(s => s.label).join("・") || "シーズン未選択");
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
