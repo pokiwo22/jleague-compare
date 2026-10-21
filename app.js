@@ -258,37 +258,41 @@ function updateZoom() {
   $("#zoomNote").innerHTML = `丸の色: <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 丸の中の数字＝${what} ／ 太い輪＝選んだ節 ／ 範囲は選んだ節の前後${WIN_HALF}節`;
 }
 
-// ---- 上位・中位・下位の相手への成績: 相手を「そのシーズンの最終順位」で3等分して、勝・分・負を集計 ----
-function tierOf(rank, n) { const k = Math.ceil(n / 3); return rank <= k ? 0 : rank > n - k ? 2 : 1; }
+// ---- 順位帯ごとの成績: 相手を「そのシーズンの最終順位」で トップ3 / 上位 / 中位 / 下位 に分けて、勝・分・負を集計 ----
+// トップ3=1〜3位、上位=4位〜上位1/3、下位=下位1/3、中位=その間(J1/20クラブなら 1-3 / 4-7 / 8-13 / 14-20)
+function tierOf(rank, n) { const k = Math.ceil(n / 3); return rank <= 3 ? 0 : rank <= k ? 1 : rank > n - k ? 3 : 2; }
 
 function renderTier() {
   const el = $("#tierBody");
   if (!el) return;
-  const NAME = ["上位", "中位", "下位"];
+  const NAME = ["トップ3", "上位", "中位", "下位"];
   el.innerHTML = S.filter(s => s.matches.length).map(s => {
     const n = Object.keys(s.all).length, k = Math.ceil(n / 3), rk = rankMap(s, s.through);
-    const T = [0, 1, 2].map(() => ({ w: 0, d: 0, l: 0 }));
+    const T = [0, 1, 2, 3].map(() => ({ w: 0, d: 0, l: 0 }));
     for (const [r, opp, , gf, ga] of s.matches) {
       if (r > round) continue;
       T[tierOf(rk[opp], n)][gf > ga ? "w" : gf < ga ? "l" : "d"]++;
     }
-    const g = t => t.w + t.d + t.l, ppg = t => (g(t) ? (3 * t.w + t.d) / g(t) : null);
-    const range = ["1〜" + k + "位", k + 1 + "〜" + (n - k) + "位", n - k + 1 + "〜" + n + "位"];
+    const g = t => t.w + t.d + t.l, pts = t => 3 * t.w + t.d, ppg = t => (g(t) ? pts(t) / g(t) : null);
+    const sum = (...ts) => ({ w: ts.reduce((x, t) => x + t.w, 0), d: ts.reduce((x, t) => x + t.d, 0), l: ts.reduce((x, t) => x + t.l, 0) });
+    const range = ["1〜3位", `4〜${k}位`, `${k + 1}〜${n - k}位`, `${n - k + 1}〜${n}位`];
     const cells = T.map((t, i) => `<div class="tcell"><div class="tl">${NAME[i]}<small>${range[i]}</small></div>
       <div class="tbar">${g(t) ? `<i class="w" style="flex:${t.w}"></i><i class="d" style="flex:${t.d}"></i><i class="l" style="flex:${t.l}"></i>` : ""}</div>
-      <div class="tn">${t.w}勝${t.d}分${t.l}敗<br>勝点率 <b>${ppg(t) == null ? "—" : ppg(t).toFixed(2)}</b></div></div>`).join("");
-    // タイプ判定(目安): 全体の強さ(勝点率)と、上位/下位への差の両方で見る。上位・下位が各3試合未満のうちは出さない
+      <div class="tn">${t.w}勝${t.d}分${t.l}敗　勝点率 <b>${ppg(t) == null ? "—" : ppg(t).toFixed(2)}</b></div></div>`).join("");
+    // タイプ判定(目安): 全体の強さ(勝点率)と、上位(1〜上位帯)/下位への差の両方で見る。上位・下位が各3試合未満のうちは出さない
+    const U = sum(T[0], T[1]);
     let type = "試合数が少ないため、タイプは判定できません";
-    if (g(T[0]) >= 3 && g(T[2]) >= 3) {
-      const pT = ppg(T[0]), pL = ppg(T[2]), all = (3 * (T[0].w + T[1].w + T[2].w) + T[0].d + T[1].d + T[2].d) / (g(T[0]) + g(T[1]) + g(T[2])), d = pL - pT;
+    if (g(U) >= 3 && g(T[3]) >= 3) {
+      const pT = ppg(U), pL = ppg(T[3]), all = pts(sum(T[0], T[1], T[2], T[3])) / g(sum(T[0], T[1], T[2], T[3])), d = pL - pT;
       type = pT >= 1.4 && pL < pT - 0.3 ? "上位に強く、下位に取りこぼすタイプ"
         : all >= 1.7 ? "どの相手からも勝点を取れる、強いタイプ"
         : all <= 1.0 ? (pT <= 0.5 ? "全体に苦戦（特に上位からは、ほとんど取れていない）" : "全体に苦戦しているタイプ")
         : d >= 1.0 && pT <= 1.0 ? "下位からは取るが、上位には勝ちにくいタイプ"
         : Math.abs(d) <= 0.4 ? "相手を選ばず、満遍なく取るタイプ" : "標準的（上位より下位から多く取る）";
+      if (g(T[0]) >= 3) type += ppg(T[0]) >= 1.4 ? "／トップ3にも強い" : ppg(T[0]) <= 0.5 ? "／トップ3からは、ほとんど取れていない" : "";
     }
     return `<div class="trow"><h4>${s.label}（${s.lg}）<span class="ttype">${type}</span></h4><div class="tgrid">${cells}</div></div>`;
-  }).join("") + `<div class="note2">相手を、そのシーズンの<b>最終順位</b>で3等分（今季は現時点の順位）。選んだ節までの成績です。勝点率＝1試合あたりの勝点。タイプは、上位と下位への勝点率の差による目安です。</div>`;
+  }).join("") + `<div class="note2">相手を、そのシーズンの<b>最終順位</b>で4つに分けています（今季は現時点の順位）。選んだ節までの成績です。勝点率＝1試合あたりの勝点。タイプは、上位（トップ3+上位）と下位への勝点率による目安です。</div>`;
 }
 
 function mgrLegend() {

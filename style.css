@@ -167,3 +167,6 @@ details > .controls { margin: 8px 0 6px; }
 .tbar { display: flex; height: 10px; margin: 4px 0; border-radius: 3px; overflow: hidden; background: var(--line); }
 .tbar i.w { background: #15803d; } .tbar i.d { background: #facc15; } .tbar i.l { background: #b91c1c; }
 .tn { font-size: .66rem; color: var(--muted); line-height: 1.5; } .tn b { color: var(--fg); font-size: .8rem; }
+
+/* 順位帯が4つになったので、2x2で並べる */
+.tgrid { grid-template-columns: repeat(2, 1fr); }
