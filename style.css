@@ -102,5 +102,5 @@ summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space:
 .mgr { display: block; margin-top: 1px; }
 .refs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: .67rem; color: var(--muted); margin-bottom: 4px; }
 .refs label { display: flex; align-items: center; gap: 3px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--fg); cursor: pointer; min-height: 28px; }
-#refLegend { font-size: .65rem; color: var(--muted); line-height: 1.6; }
-#refLegend svg { vertical-align: middle; margin-right: 3px; }
+#paceLegend { font-size: .65rem; color: var(--muted); line-height: 1.6; }
+#paceLegend svg { vertical-align: middle; margin-right: 3px; }

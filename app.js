@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(), idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(["1", "d"]), paceOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -50,10 +50,10 @@ async function init() {
   matchMedia("(prefers-color-scheme: dark)").onchange = draw;
   if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
-  (q.get("ref") || "").split(",").forEach(k => refs.add(k));
+  if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(Boolean));
   document.querySelectorAll("#refs input").forEach(i => {
     i.checked = refs.has(i.value);
-    i.onchange = () => { refs = new Set([...document.querySelectorAll("#refs input:checked")].map(x => x.value)); draw(); mgrLegend(); setRound(round); };
+    i.onchange = () => { refs = new Set([...document.querySelectorAll("#refs input:checked")].map(x => x.value)); drawPace(); setRound(round); };
   });
   refresh();
 }
@@ -91,6 +91,7 @@ async function refresh() {
   $("#round").max = max;
   if (!round) round = Math.max(1, ...S.filter(s => s.key === idx.seasons[0].key).map(s => s.through), 1);
   setRound(round);
+  await loadPace();
   draw();
   mgrLegend();
 }
@@ -119,7 +120,7 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ...(refs.size ? { ref: [...refs].join(",") } : {}) })), 250);
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(",") })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
 }
@@ -157,72 +158,94 @@ function moveCursor(ch) {
 }
 const cursor = { id: "cursor", afterLayout: moveCursor, afterDestroy: ch => ch.cur?.remove() };
 
-// 基準クラブ: 各シーズンの優勝/2位/3位/下位3クラブ(確定済みシーズンは最終順位、今季は現時点)。選択中クラブ自身は除く
-// 色=種類(金/銀/銅/降格=濃色)、線種=シーズン(実線/破線/点線…)
-const REF = { 1: "優勝", 2: "2位", 3: "3位", d: "降格圏" };
-const DASH = [[], [8, 4], [2, 3], [10, 3, 2, 3], [1, 4], [12, 2]];
-function refTeams(s) {
-  const L = Object.entries(s.all).map(([tid, t]) => ({ tid, t, b: t.byRound[s.through - 1] })).filter(x => x.b)
-    .sort((a, b) => b.b.points - a.b.points || b.b.gd - a.b.gd || b.b.gf - a.b.gf);
-  const pick = { 1: [L[0]], 2: [L[1]], 3: [L[2]], d: L.slice(-3) };
-  return [...refs].filter(k => REF[k]).flatMap(k => pick[k].filter(x => x && x.tid !== club).map(x => ({ k, ...x })));
-}
-
 function mgrLegend() {
-  const rows = S.filter(s => s.mgr.length > 1).map((s, _) => {
+  const rows = S.filter(s => s.mgr.length > 1).map(s => {
     const i = S.indexOf(s);
     return `<div><b>${s.label}</b> ` + s.mgr.map((m, k) => `<span class="ml"><i class="dot" style="background:${mgrColor(s, i, k)}"></i>${short(m.n)} ${m.r}節〜</span>`).join(" ") + "</div>";
   });
   $("#mgrLegend").innerHTML = rows.length ? "<div>線の中心の色＝監督（途中交代あり）</div>" + rows.join("") : "";
-  const sw = (col, dash) => `<svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="${col}" stroke-width="2" stroke-dasharray="${dash.join(" ")}"/></svg>`;
-  const ref = S.map((s, i) => {
-    const t = refTeams(s);
-    return t.length ? `<div><b>${s.label}</b> ` + t.map(x => `<span class="ml">${sw(css(`--rf${x.k}`), DASH[i % 6])}${REF[x.k]} ${x.t.name}</span>`).join(" ") + "</div>" : "";
-  }).join("");
-  $("#refLegend").innerHTML = ref ? "<div>丸付きの太線＝選択中のクラブ ／ 細線＝比較クラブ（色＝順位の種類、線の種類＝シーズン。今季は現時点の順位）</div>" + ref : "";
 }
 
+const scaleOpts = f => {
+  const grid = css("--line"), fg = css("--muted");
+  return {
+    animation: false, maintainAspectRatio: false, events: [], // タップ/ホバーの吹き出しは出さない
+    scales: {
+      x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
+      y: { ticks: { color: fg }, grid: { color: c => (f === "gd" && c.tick.value === 0 ? "#dc2626" : grid), lineWidth: c => (f === "gd" && c.tick.value === 0 ? 2 : 1) } },
+    },
+    plugins: {
+      legend: { onClick: () => {}, labels: { filter: it => it.text, color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } },
+      tooltip: { enabled: false },
+    },
+  };
+};
+
 function draw() {
-  const max = Math.max(1, ...S.map(s => s.rounds));
+  const max = Math.max(1, ...S.map(s => s.rounds)), f = $("#metric").value;
   const labels = Array.from({ length: max }, (_, i) => i + 1);
-  for (const [id, f] of [["chPts", $("#metric").value]]) {
-    charts[id]?.destroy();
-    const grid = css("--line"), fg = css("--muted");
-    charts[id] = new Chart($("#" + id), {
-      type: "line",
-      plugins: [cursor],
-      data: {
-        labels,
-        datasets: S.flatMap((s, i) => {
-          const data = labels.map(r => at(s, r)?.[f] ?? null), col = css(`--c${i % 6}`), l = `${s.label}（${s.lg}）`;
-          const base = { data, pointRadius: 0, pointHoverRadius: 0, tension: 0 };
-          const refsDs = refTeams(s).map(x => ({ // 比較クラブ: 細い半透明の線(種類ごとに破線を変える)
-            label: "", data: labels.map(r => (r <= s.through ? x.t.byRound[r - 1]?.[f] ?? null : null)), borderColor: css(`--rf${x.k}`), borderWidth: 1.8,
-            borderDash: DASH[i % 6], pointRadius: 0, pointHoverRadius: 0, tension: 0, order: 2,
-          }));
-          return [
-            ...refsDs,
-            { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 3 : 2.5, order: 1, // 外側=シーズン色。選択クラブは丸印つき
-              pointRadius: 3.5, pointBorderColor: col, pointBackgroundColor: css("--card"), pointBorderWidth: 1.5 },
-            { ...base, label: "", borderColor: col, borderWidth: 1.5, order: 0, // 中心=監督色(監督ごとに区間の色を変える)
-              segment: { borderColor: c => mgrColor(s, i, mgrIdx(s, c.p1DataIndex + 1)) } },
-          ];
-        }),
-      },
-      options: {
-        animation: false, maintainAspectRatio: false, events: [], // タップ/ホバーの吹き出しは出さない
-        interaction: { mode: "index", intersect: false },
-        scales: {
-          x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
-          y: { ticks: { color: fg }, grid: { color: c => (f === "gd" && c.tick.value === 0 ? "#dc2626" : grid), lineWidth: c => (f === "gd" && c.tick.value === 0 ? 2 : 1) } },
-        },
-        plugins: {
-          legend: { onClick: () => {}, labels: { filter: it => it.text, color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } },
-          tooltip: { enabled: false },
-        },
-      },
-    });
+  charts.chPts?.destroy();
+  charts.chPts = new Chart($("#chPts"), {
+    type: "line",
+    plugins: [cursor],
+    data: {
+      labels,
+      datasets: S.flatMap((s, i) => {
+        const data = labels.map(r => at(s, r)?.[f] ?? null), col = css(`--c${i % 6}`), l = `${s.label}（${s.lg}）`;
+        const base = { data, pointRadius: 0, pointHoverRadius: 0, tension: 0 };
+        return [
+          { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 3 : 2.5, order: 1 }, // 外側=シーズン色
+          { ...base, label: "", borderColor: col, borderWidth: 1.5, order: 0, // 中心=監督色(監督ごとに区間の色を変える)
+            segment: { borderColor: c => mgrColor(s, i, mgrIdx(s, c.p1DataIndex + 1)) } },
+        ];
+      }),
+    },
+    options: scaleOpts(f),
+  });
+  drawPace();
+}
+
+// ---- ペース比較: 選択クラブの今季 vs 過去の確定シーズンの優勝/2位/3位/下位3クラブ(同じ節数のシーズンのみ) ----
+const REF = { 1: "優勝", 2: "2位", 3: "3位", d: "降格圏" };
+const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+
+async function loadPace() {
+  const cur = latest(club), lg = cur && leagueOf(cur, club), cd = cur && await load(cur.key, lg), ct = cd?.teams[club];
+  if (!ct) return void (pace = null);
+  const past = [];
+  for (const s of idx.seasons) {
+    const d = s.key === cur.key ? null : await load(s.key, lg);
+    if (!d || d.through !== d.rounds || d.rounds !== cd.rounds) continue; // 確定済みで同じ節数のシーズンだけ
+    const L = Object.values(d.teams).map(t => ({ t, b: t.byRound[d.rounds - 1] }))
+      .sort((a, b) => b.b.points - a.b.points || b.b.gd - a.b.gd || b.b.gf - a.b.gf);
+    past.push({ key: s.key, label: s.label, cat: { 1: [L[0]], 2: [L[1]], 3: [L[2]], d: L.slice(-3) } });
   }
+  pace = { label: cur.label, lg, by: ct.byRound, through: cd.through, rounds: cd.rounds, past };
+  $("#refSeasons").innerHTML = "<span>対象シーズン:</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
+  $("#refSeasons").querySelectorAll("input").forEach(i => {
+    i.onchange = () => { i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); drawPace(); };
+  });
+}
+
+function drawPace() {
+  charts.chPace?.destroy();
+  delete charts.chPace;
+  const box = $("#paceSec .box");
+  if (!pace || !pace.past.length) { $("#paceLegend").textContent = pace ? "比較できる過去シーズン（確定済みで同じ節数）がありません。" : ""; box.style.display = "none"; return; }
+  box.style.display = "";
+  const f = $("#metric").value, labels = Array.from({ length: pace.rounds }, (_, i) => i + 1);
+  const inc = pace.past.filter(p => !paceOff.has(p.key)), ds = [];
+  for (const k of Object.keys(REF).filter(k => refs.has(k))) {
+    const xs = inc.flatMap(p => p.cat[k]), col = css(`--rf${k}`);
+    if (refs.has("i")) xs.forEach(x => ds.push({ label: "", data: labels.map(r => x.t.byRound[r - 1][f]), borderColor: col + "70", borderWidth: 1, pointRadius: 0, tension: 0, order: 3 }));
+    if (xs.length) ds.push({ label: `${REF[k]}クラブの平均`, data: labels.map(r => avg(xs.map(x => x.t.byRound[r - 1][f]))), borderColor: col, borderWidth: 2.5, borderDash: [6, 3], pointRadius: 0, tension: 0, order: 1 });
+  }
+  const c0 = css("--c0");
+  ds.push({ label: `${pace.label} ${idx.teams[club]}（選択中）`, data: labels.map(r => (r <= pace.through ? pace.by[r - 1][f] : null)), borderColor: c0, backgroundColor: c0,
+    borderWidth: 3, pointRadius: 3.5, pointBorderColor: c0, pointBackgroundColor: css("--card"), pointBorderWidth: 1.5, tension: 0, order: 0 }); // 丸印つきの太線
+  charts.chPace = new Chart($("#chPace"), { type: "line", plugins: [cursor], data: { labels, datasets: ds }, options: scaleOpts(f) });
+  const rows = inc.map(p => `<div><b>${p.label}</b> ` + Object.keys(REF).filter(k => refs.has(k)).map(k => `<span class="ml">${REF[k]} ${p.cat[k].map(x => x.t.name).join("・")}</span>`).join(" ") + "</div>").join("");
+  $("#paceLegend").innerHTML = "<div>丸付きの太線＝選択中のクラブ（今季）／ 破線＝過去シーズンの該当クラブの平均 ／ 細線＝個別のクラブ</div>" + rows;
 }
 
 function hideTips() {
