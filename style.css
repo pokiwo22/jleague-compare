@@ -186,3 +186,8 @@ details > .controls { margin: 8px 0 6px; }
 .tl { font-size: .66rem; line-height: 1.25; } .tl small { display: block; margin: 0; font-size: .55rem; }
 .tn { font-size: .58rem; line-height: 1.45; white-space: nowrap; } .tn b { font-size: .72rem; }
 .trow { margin: 6px 0 8px; }
+
+/* ホーム=上に白線 / アウェイ=上に黒線。選んだ節は大きくせず、太い枠で示す(全マス同じ大きさ) */
+.sq { box-shadow: inset 0 3px 0 #fff; }
+.sq.a { box-shadow: inset 0 3px 0 #000; }
+.sq.now { transform: none; outline: 2px solid var(--fg); outline-offset: 1px; z-index: 2; position: relative; }
