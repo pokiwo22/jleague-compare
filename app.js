@@ -6,6 +6,18 @@ const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
+// クラブの代表色の近似(文字色用)。公式の指定色ではなく、一般に知られたカラーから選んだ目安。未登録のクラブは通常の文字色
+const CLUB_COLOR = {
+  akita: "#1d4f9b", chiba: "#c99a00", cosaka: "#d1006f", ehime: "#e87500", ftokyo: "#00479d", fujieda: "#6a2c91", fukuoka: "#0b3a8c",
+  gosaka: "#0a4ea1", hiroshima: "#4a2c8f", iwaki: "#d60000", iwata: "#0070b8", kanazawa: "#d4002a", kashima: "#a0012a", kashiwa: "#c8a000",
+  kawasakif: "#0a78b8", kitakyushu: "#c9a800", kobe: "#b00033", kofu: "#1d4ea0", kumamoto: "#d5001c", kusatsu: "#00843d", kyoto: "#5b2a86",
+  machida: "#00338d", matsumoto: "#00793a", mito: "#0a3a9a", nagasaki: "#ea5a00", nagoya: "#d4002a", niigata: "#e86a00", oita: "#004a9a",
+  okayama: "#8b1538", omiya: "#ee7700", ryukyu: "#d00020", sagamihara: "#00833e", sapporo: "#d6001c", sendai: "#c9a000", shimizu: "#e56a00",
+  shonan: "#5aa300", tochigi: "#c9a500", tokushima: "#00428f", tokyov: "#0b7a3b", tosu: "#0066b3", toyama: "#003c8f", urawa: "#d3001e",
+  yamagata: "#00439a", yamaguchi: "#c8102e", yokohamafc: "#1f86c7", yokohamafm: "#0b3a8a", "今治": "#1565c0", "八戸": "#2a8a3c",
+  "岩手": "#c01020", "鹿児島": "#0a2a66",
+};
+
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
 const latest = id => idx.seasons.find(s => s.leagues.J1?.includes(id) || s.leagues.J2?.includes(id));
 const leagueOf = (s, id) => (s.leagues.J1?.includes(id) ? "J1" : s.leagues.J2?.includes(id) ? "J2" : null);
@@ -92,7 +104,8 @@ async function refresh() {
     };
     box.append(l);
   }
-  $("#seasonsSum").textContent = `${idx.teams[club]}（${$("#league").value}） ｜ ` + (idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club)).map(s => s.label).join("・") || "シーズン未選択");
+  $("#seasonsSum").innerHTML = `<b class="sumclub">${idx.teams[club]}</b><small class="sumlg">${$("#league").value}</small>`;
+  $("#seasonsBox").style.setProperty("--club", CLUB_COLOR[club] || "var(--fg)");
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
