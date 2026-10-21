@@ -205,6 +205,9 @@ details > .controls { margin: 8px 0 6px; }
 /* 順位帯の成績: シーズン名の横に、グラフと同じ色の棒 */
 .sbar { display: inline-block; width: 28px; height: 5px; border-radius: 3px; margin-right: 7px; vertical-align: middle; }
 
-/* 右上の小さな写し: 半透明で、タッチを邪魔しない */
-#mini { display: none; position: fixed; top: 8px; right: 8px; z-index: 5; opacity: .7; pointer-events: none; background: var(--bg); border: 1px solid var(--tint-line); border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
-#mini.on { display: block; }
+/* ペース比較: 種類のチェックは横1列、選んだ種類のオプションも横に並べる */
+#refs .toprow { display: flex; flex-wrap: nowrap; gap: 4px; margin: 6px 0 2px; }
+#refs .toprow label { padding: 3px 7px; white-space: nowrap; }
+#refs .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 4px; margin: 4px 0; padding: 0; border-left: 0; }
+#refs .sub label { padding: 2px 7px; min-height: 24px; font-size: .62rem; white-space: nowrap; }
+#refs .sub .sn { font-size: .7rem; min-width: 3.2em; }

@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", miniOn = false, indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -48,11 +48,6 @@ async function init() {
     if (e.key === "ArrowRight") setRound(round + 1);
   };
   matchMedia("(prefers-color-scheme: dark)").onchange = draw;
-  new IntersectionObserver(([e]) => { // グラフが上へ外れたとき(下へスクロール中)だけ写しを出す
-    miniOn = !e.isIntersecting && e.boundingClientRect.bottom <= 0;
-    $("#mini").classList.toggle("on", miniOn);
-    if (miniOn) renderMini();
-  }, { threshold: 0 }).observe($("#chPts").parentNode);
   if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
   if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(Boolean));
@@ -143,7 +138,6 @@ function setRound(r) {
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
   dimStrips();
   renderTier();
-  if (miniOn) renderMini(); // 小さな写しも、ドラッグエリアに連動
 }
 
 function cards() {
@@ -270,21 +264,6 @@ function dimStrips() {
   document.querySelectorAll("#strips .sq").forEach(e => { e.classList.toggle("dim", +e.dataset.r > round); e.classList.toggle("now", +e.dataset.r === round); });
 }
 
-// ---- 右上の小さな写し: メイングラフのキャンバスを縮小コピー + 選んだ節の縦線(ドラッグエリアに連動) ----
-function renderMini() {
-  const ch = charts.chPts, m = $("#mini");
-  if (!ch || !m) return;
-  const src = ch.canvas, W = 130, H = Math.round(W * src.clientHeight / Math.max(1, src.clientWidth)), dpr = Math.min(2, devicePixelRatio || 1);
-  if (m.width !== W * dpr || m.height !== H * dpr) { m.width = W * dpr; m.height = H * dpr; m.style.width = W + "px"; m.style.height = H + "px"; }
-  const c = m.getContext("2d");
-  c.setTransform(dpr, 0, 0, dpr, 0, 0);
-  c.clearRect(0, 0, W, H);
-  c.drawImage(src, 0, 0, src.width, src.height, 0, 0, W, H);
-  const k = W / src.clientWidth, x = ch.scales.x.getPixelForValue(round - 1) * k, { top, bottom } = ch.chartArea;
-  c.strokeStyle = css("--fg"); c.lineWidth = 1.5;
-  c.beginPath(); c.moveTo(x, top * k); c.lineTo(x, bottom * k); c.stroke();
-}
-
 function draw() {
   const max = Math.max(1, ...S.map(s => s.rounds)), f = $("#metric").value;
   const labels = Array.from({ length: max }, (_, i) => i + 1);
@@ -306,7 +285,6 @@ function draw() {
     },
     options: scaleOpts(f),
   });
-  renderMini();
   drawPace();
 }
 
@@ -337,11 +315,13 @@ async function loadPace() {
 function renderRefs() {
   if (!pace) return void ($("#refs").innerHTML = "");
   const inc = pace.past.filter(p => !paceOff.has(p.key));
-  $("#refs").innerHTML = Object.entries(REF).map(([k, name]) => {
-    const sub = refs.has(k) ? '<div class="sub">' + `<div class="row2"><b>平均線</b><label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>過去${inc.length}シーズンの平均を表示</label></div>` + inc.map(p => `<div class="row2"><b>${p.label}</b>` +
-      p.cat[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${x.t.name}</label>`).join("") + "</div>").join("") + "</div>" : "";
-    return `<div class="rg"><label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}${k === "d" ? "3クラブ" : ""}</label>${sub}</div>`;
-  }).join("");
+  const top = Object.entries(REF).map(([k, name]) => `<label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}${k === "d" ? "3クラブ" : ""}</label>`).join("");
+  // 選んだ種類ごとに、平均線と各クラブのチェックを横に並べる(折り返す)
+  const subs = Object.entries(REF).filter(([k]) => refs.has(k)).map(([k, name]) =>
+    `<div class="sub"><b class="sn" style="color:var(--rf${k})">${name}</b>` +
+    `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label>` +
+    inc.flatMap(p => p.cat[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${p.label.replace(/^20/, "")} ${x.t.name}</label>`)).join("") + "</div>").join("");
+  $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
 }
 
 const endLabels = { // 個別線の右端にクラブ名(シーズン下2桁つき)を描く。縦に重なる分は少しずつずらす
