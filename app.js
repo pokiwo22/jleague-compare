@@ -182,7 +182,7 @@ function draw() {
         }),
       },
       options: {
-        animation: false, maintainAspectRatio: false,
+        animation: false, maintainAspectRatio: false, events: [], // タップ/ホバーの吹き出しは出さない
         interaction: { mode: "index", intersect: false },
         scales: {
           x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
@@ -190,7 +190,7 @@ function draw() {
         },
         plugins: {
           legend: { onClick: () => {}, labels: { filter: it => it.text, color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } },
-          tooltip: { filter: it => it.dataset.label },
+          tooltip: { enabled: false },
         },
       },
     });
