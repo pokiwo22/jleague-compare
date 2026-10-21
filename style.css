@@ -88,3 +88,5 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .thumb { position: absolute; left: calc(50% - 3px); top: 8px; bottom: 8px; width: 6px; border-radius: 3px; background: #fff; opacity: 0; pointer-events: none; }
 .pad.on .thumb { opacity: 1; }
 .cur { position: absolute; left: -1px; width: 2px; background: var(--muted); opacity: .8; pointer-events: none; z-index: 1; will-change: transform; }
+summary { justify-content: space-between; gap: 8px; }
+summary .hint { font-size: .6rem; color: var(--muted); opacity: .8; white-space: nowrap; }
