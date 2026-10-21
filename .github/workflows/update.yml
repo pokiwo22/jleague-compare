@@ -1,7 +1,7 @@
 name: update-and-deploy
 
-# 本番(main)は https://<user>.github.io/jleague-compare/ 、試作(dev ブランチ)は同じサイトの /dev/ に載せる。
-# どのブランチの push でも「main + dev」を組み合わせて1回で公開するので、main に取り込むまで本番は変わらない。
+# 本番(main)は https://<user>.github.io/jleague-compare/ 、試作は同じサイトの /dev/ /blocks/ に載せる(ブランチ名=パス)。
+# どのブランチの push でも「main + 試作ブランチ」を組み合わせて1回で公開するので、main に取り込むまで本番は変わらない。
 on:
   schedule:  # UTC。JST = UTC+9
     - cron: "30 7,10,12 * * 0,6"   # 土日 JST 16:30 / 19:30 / 21:30
@@ -13,7 +13,7 @@ on:
         required: false
         default: ""
   push:
-    branches: [main, dev]
+    branches: [main, dev, blocks]
     paths: [index.html, app.js, style.css, "data/**", .github/workflows/update.yml]
 
 permissions:
@@ -48,18 +48,22 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data
           git diff --cached --quiet || (git commit -m "data: update" && git push)
-      - name: Add dev branch (if it exists)
+      - name: Add prototype branches (if they exist)
         working-directory: site
         run: |
-          if git fetch --depth=1 origin dev; then git worktree add --detach ../site-dev FETCH_HEAD; fi
+          for b in dev blocks; do
+            if git fetch --depth=1 origin "$b"; then git worktree add --detach "../site-$b" FETCH_HEAD; fi
+          done
       - name: Stage site
         run: |
           mkdir _site
           cp -r site/index.html site/app.js site/style.css site/data _site/
-          if [ -d site-dev ]; then
-            mkdir _site/dev
-            cp -r site-dev/index.html site-dev/app.js site-dev/style.css site-dev/data _site/dev/
-          fi
+          for b in dev blocks; do
+            if [ -d "site-$b" ]; then
+              mkdir "_site/$b"
+              cp -r "site-$b/index.html" "site-$b/app.js" "site-$b/style.css" "site-$b/data" "_site/$b/"
+            fi
+          done
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }
