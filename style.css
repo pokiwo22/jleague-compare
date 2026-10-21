@@ -211,3 +211,17 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 4px; margin: 4px 0; padding: 0; border-left: 0; }
 #refs .sub label { padding: 2px 7px; min-height: 24px; font-size: .62rem; white-space: nowrap; }
 #refs .sub .sn { font-size: .7rem; min-width: 3.2em; }
+
+/* ペース比較: チェックボックスをなくし、チップを押して切り替える(選択中=濃い色)。枠の大きさは変えず、文字を大きく */
+.vh { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+#refs .chip, #refSeasons .chip { position: relative; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; white-space: nowrap; overflow: hidden;
+  padding: 0 8px; border-radius: 999px; font-weight: 600; line-height: 1; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  background: var(--card); color: var(--fg); border: 1px solid var(--line); }
+@supports (background: color-mix(in srgb, red 10%, white)) {
+  #refs .chip, #refSeasons .chip { background: color-mix(in srgb, var(--cc) 13%, var(--card)); border-color: color-mix(in srgb, var(--cc) 32%, var(--line)); }
+}
+#refs .chip.on, #refSeasons .chip.on { background: var(--cc); border-color: var(--cc); color: var(--bg); }
+#refs .toprow { display: flex; flex-wrap: nowrap; gap: 4px; }
+#refs .toprow .chip { flex: 1 1 auto; min-height: 30px; font-size: .88rem; padding: 0 6px; }
+#refs .sub .chip { min-height: 24px; font-size: .78rem; }
+#refSeasons .chip { min-height: 24px; font-size: .78rem; }
