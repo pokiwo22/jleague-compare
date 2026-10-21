@@ -6,12 +6,12 @@ const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 let urlTimer, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
-const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
 const latest = id => idx.seasons.find(s => s.leagues.J1?.includes(id) || s.leagues.J2?.includes(id));
 const leagueOf = (s, id) => (s.leagues.J1?.includes(id) ? "J1" : s.leagues.J2?.includes(id) ? "J2" : null);
 
 async function init() {
-  idx = await fetch("data/index.json").then(r => r.json()).catch(() => null);
+  idx = await fetch("data/index.json", { cache: "no-cache" }).then(r => r.json()).catch(() => null);
   if (!idx || !idx.seasons.length) return void ($("#cards").textContent = "データがありません。");
   $("#updated").textContent = new Date(idx.updated).toLocaleString("ja-JP");
   const q = new URLSearchParams(location.search);
