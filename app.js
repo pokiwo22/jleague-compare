@@ -55,7 +55,7 @@ async function init() {
   rkMode = q.get("rk") === "final" ? "final" : "at";
   document.querySelectorAll('#zoomCtl input[name="zrk"]').forEach(i => {
     i.checked = i.value === rkMode;
-    i.onchange = () => { rkMode = i.value; updateZoom(); setRound(round); };
+    i.onchange = () => { rkMode = i.value; updateZoom(); charts.chPts?.update("none"); renderTier(); setRound(round); };
   });
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
   $("#paceBox").ontoggle = () => drawPace();
@@ -106,6 +106,7 @@ async function refresh() {
   draw();
   mgrLegend();
   drawZoom();
+  renderTier();
 }
 
 // 監督: mgr=[{r:その監督の最初の節,n:名前}]。節に応じた監督と、中心線の色(最初の監督=シーズン色、以降は別色)
@@ -135,7 +136,9 @@ function setRound(r) {
   urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(rkMode === "final" ? { rk: "final" } : {}) })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
+  charts.chPts?.draw(); // 帯(選んだ節のマスの拡大)だけ描き直す
   updateZoom();
+  renderTier();
 }
 
 function cards() {
@@ -255,6 +258,39 @@ function updateZoom() {
   $("#zoomNote").innerHTML = `丸の色: <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 丸の中の数字＝${what} ／ 太い輪＝選んだ節 ／ 範囲は選んだ節の前後${WIN_HALF}節`;
 }
 
+// ---- 上位・中位・下位の相手への成績: 相手を「そのシーズンの最終順位」で3等分して、勝・分・負を集計 ----
+function tierOf(rank, n) { const k = Math.ceil(n / 3); return rank <= k ? 0 : rank > n - k ? 2 : 1; }
+
+function renderTier() {
+  const el = $("#tierBody");
+  if (!el) return;
+  const NAME = ["上位", "中位", "下位"];
+  el.innerHTML = S.filter(s => s.matches.length).map(s => {
+    const n = Object.keys(s.all).length, k = Math.ceil(n / 3), rk = rankMap(s, s.through);
+    const T = [0, 1, 2].map(() => ({ w: 0, d: 0, l: 0 }));
+    for (const [r, opp, , gf, ga] of s.matches) {
+      if (r > round) continue;
+      T[tierOf(rk[opp], n)][gf > ga ? "w" : gf < ga ? "l" : "d"]++;
+    }
+    const g = t => t.w + t.d + t.l, ppg = t => (g(t) ? (3 * t.w + t.d) / g(t) : null);
+    const range = ["1〜" + k + "位", k + 1 + "〜" + (n - k) + "位", n - k + 1 + "〜" + n + "位"];
+    const cells = T.map((t, i) => `<div class="tcell"><div class="tl">${NAME[i]}<small>${range[i]}</small></div>
+      <div class="tbar">${g(t) ? `<i class="w" style="flex:${t.w}"></i><i class="d" style="flex:${t.d}"></i><i class="l" style="flex:${t.l}"></i>` : ""}</div>
+      <div class="tn">${t.w}勝${t.d}分${t.l}敗<br>勝点率 <b>${ppg(t) == null ? "—" : ppg(t).toFixed(2)}</b></div></div>`).join("");
+    // タイプ判定(目安): 全体の強さ(勝点率)と、上位/下位への差の両方で見る。上位・下位が各3試合未満のうちは出さない
+    let type = "試合数が少ないため、タイプは判定できません";
+    if (g(T[0]) >= 3 && g(T[2]) >= 3) {
+      const pT = ppg(T[0]), pL = ppg(T[2]), all = (3 * (T[0].w + T[1].w + T[2].w) + T[0].d + T[1].d + T[2].d) / (g(T[0]) + g(T[1]) + g(T[2])), d = pL - pT;
+      type = pT >= 1.4 && pL < pT - 0.3 ? "上位に強く、下位に取りこぼすタイプ"
+        : all >= 1.7 ? "どの相手からも勝点を取れる、強いタイプ"
+        : all <= 1.0 ? (pT <= 0.5 ? "全体に苦戦（特に上位からは、ほとんど取れていない）" : "全体に苦戦しているタイプ")
+        : d >= 1.0 && pT <= 1.0 ? "下位からは取るが、上位には勝ちにくいタイプ"
+        : Math.abs(d) <= 0.4 ? "相手を選ばず、満遍なく取るタイプ" : "標準的（上位より下位から多く取る）";
+    }
+    return `<div class="trow"><h4>${s.label}（${s.lg}）<span class="ttype">${type}</span></h4><div class="tgrid">${cells}</div></div>`;
+  }).join("") + `<div class="note2">相手を、そのシーズンの<b>最終順位</b>で3等分（今季は現時点の順位）。選んだ節までの成績です。勝点率＝1試合あたりの勝点。タイプは、上位と下位への勝点率の差による目安です。</div>`;
+}
+
 function mgrLegend() {
   const rows = S.filter(s => s.mgr.length > 1).map(s => {
     const i = S.indexOf(s);
@@ -278,13 +314,49 @@ const scaleOpts = f => {
   };
 };
 
+// ---- グラフ下の帯: 節の列に合わせた縦長マス(色=結果、中=相手の順位。2桁は縦に積んで大きく書く) ----
+const STRIP_CELL = 24, STRIP_GAP = 4;
+const matchStrip = {
+  id: "matchStrip",
+  afterDatasetsDraw(ch) {
+    const rowsS = S.filter(s => s.matches.length);
+    if (!rowsS.length) return;
+    const c = ch.ctx, sx = ch.scales.x, { left, right } = ch.chartArea, n = ch.data.labels.length;
+    const step = (right - left) / Math.max(1, n - 1), w = Math.max(3, step - 1);
+    const fs = Math.max(6, Math.min(11, w * 1.25));
+    c.save(); c.textAlign = "center"; c.textBaseline = "middle"; c.font = `700 ${fs}px system-ui, sans-serif`;
+    rowsS.forEach((s, ri) => {
+      const y0 = sx.bottom + 6 + ri * (STRIP_CELL + STRIP_GAP);
+      c.fillStyle = css("--muted"); c.textAlign = "right"; c.font = "9px system-ui, sans-serif";
+      c.fillText(s.label.replace(/^20/, ""), left - w / 2 - 3, y0 + STRIP_CELL / 2);
+      c.textAlign = "center"; c.font = `700 ${fs}px system-ui, sans-serif`;
+      for (const [r, opp, , gf, ga] of s.matches) {
+        const res = gf > ga ? "w" : gf < ga ? "l" : "d", cx = sx.getPixelForValue(r - 1), cur = r === round;
+        const rk = rkMode === "final" ? rankMap(s, s.through)[opp] : r >= MIN_RANK_ROUND ? rankMap(s, r - 1)[opp] : null;
+        const ww = cur ? w * 1.9 : w, hh = cur ? STRIP_CELL + 6 : STRIP_CELL, yy = cur ? y0 - 3 : y0;
+        c.globalAlpha = r > round ? 0.3 : 1;
+        c.fillStyle = RES[res]; c.fillRect(cx - ww / 2, yy, ww, hh);
+        if (cur) { c.lineWidth = 2; c.strokeStyle = css("--fg"); c.strokeRect(cx - ww / 2, yy, ww, hh); }
+        c.fillStyle = res === "d" ? "#1c1917" : "#fff";
+        const t = rk == null ? "—" : String(rk), f2 = cur ? fs * 1.15 : fs;
+        c.font = `700 ${f2}px system-ui, sans-serif`;
+        if (t.length === 2) { c.fillText(t[0], cx, yy + hh / 2 - f2 * 0.52); c.fillText(t[1], cx, yy + hh / 2 + f2 * 0.52); }
+        else c.fillText(t, cx, yy + hh / 2 + 0.5);
+      }
+    });
+    c.restore();
+  },
+};
+
 function draw() {
   const max = Math.max(1, ...S.map(s => s.rounds)), f = $("#metric").value;
   const labels = Array.from({ length: max }, (_, i) => i + 1);
   charts.chPts?.destroy();
+  const stripRows = S.filter(s => s.matches.length).length, stripH = stripRows ? stripRows * (STRIP_CELL + STRIP_GAP) + 8 : 0;
+  $("#chPts").parentNode.style.height = 340 + stripH + "px"; // 帯のぶん、グラフの枠を高くする
   charts.chPts = new Chart($("#chPts"), {
     type: "line",
-    plugins: [cursor],
+    plugins: [cursor, matchStrip],
     data: {
       labels,
       datasets: S.flatMap((s, i) => {
@@ -297,7 +369,7 @@ function draw() {
         ];
       }),
     },
-    options: scaleOpts(f),
+    options: { ...scaleOpts(f), layout: { padding: { bottom: stripH, left: 2, right: 4 } } },
   });
   drawPace();
 }
