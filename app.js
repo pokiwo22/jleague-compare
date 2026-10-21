@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -50,6 +50,11 @@ async function init() {
   matchMedia("(prefers-color-scheme: dark)").onchange = draw;
   if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
+  (q.get("ref") || "").split(",").forEach(k => refs.add(k));
+  document.querySelectorAll("#refs input").forEach(i => {
+    i.checked = refs.has(i.value);
+    i.onchange = () => { refs = new Set([...document.querySelectorAll("#refs input:checked")].map(x => x.value)); draw(); mgrLegend(); setRound(round); };
+  });
   refresh();
 }
 
@@ -114,7 +119,7 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value })), 250);
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ...(refs.size ? { ref: [...refs].join(",") } : {}) })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
 }
@@ -152,12 +157,29 @@ function moveCursor(ch) {
 }
 const cursor = { id: "cursor", afterLayout: moveCursor, afterDestroy: ch => ch.cur?.remove() };
 
+// 基準クラブ: 各シーズンの優勝/2位/3位/下位3クラブ(確定済みシーズンは最終順位、今季は現時点)。選択中クラブ自身は除く
+// 色=種類(金/銀/銅/降格=濃色)、線種=シーズン(実線/破線/点線…)
+const REF = { 1: "優勝", 2: "2位", 3: "3位", d: "降格圏" };
+const DASH = [[], [8, 4], [2, 3], [10, 3, 2, 3], [1, 4], [12, 2]];
+function refTeams(s) {
+  const L = Object.entries(s.all).map(([tid, t]) => ({ tid, t, b: t.byRound[s.through - 1] })).filter(x => x.b)
+    .sort((a, b) => b.b.points - a.b.points || b.b.gd - a.b.gd || b.b.gf - a.b.gf);
+  const pick = { 1: [L[0]], 2: [L[1]], 3: [L[2]], d: L.slice(-3) };
+  return [...refs].filter(k => REF[k]).flatMap(k => pick[k].filter(x => x && x.tid !== club).map(x => ({ k, ...x })));
+}
+
 function mgrLegend() {
   const rows = S.filter(s => s.mgr.length > 1).map((s, _) => {
     const i = S.indexOf(s);
     return `<div><b>${s.label}</b> ` + s.mgr.map((m, k) => `<span class="ml"><i class="dot" style="background:${mgrColor(s, i, k)}"></i>${short(m.n)} ${m.r}節〜</span>`).join(" ") + "</div>";
   });
   $("#mgrLegend").innerHTML = rows.length ? "<div>線の中心の色＝監督（途中交代あり）</div>" + rows.join("") : "";
+  const sw = (col, dash) => `<svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="${col}" stroke-width="2" stroke-dasharray="${dash.join(" ")}"/></svg>`;
+  const ref = S.map((s, i) => {
+    const t = refTeams(s);
+    return t.length ? `<div><b>${s.label}</b> ` + t.map(x => `<span class="ml">${sw(css(`--rf${x.k}`), DASH[i % 6])}${REF[x.k]} ${x.t.name}</span>`).join(" ") + "</div>" : "";
+  }).join("");
+  $("#refLegend").innerHTML = ref ? "<div>丸付きの太線＝選択中のクラブ ／ 細線＝比較クラブ（色＝順位の種類、線の種類＝シーズン。今季は現時点の順位）</div>" + ref : "";
 }
 
 function draw() {
@@ -174,8 +196,14 @@ function draw() {
         datasets: S.flatMap((s, i) => {
           const data = labels.map(r => at(s, r)?.[f] ?? null), col = css(`--c${i % 6}`), l = `${s.label}（${s.lg}）`;
           const base = { data, pointRadius: 0, pointHoverRadius: 0, tension: 0 };
+          const refsDs = refTeams(s).map(x => ({ // 比較クラブ: 細い半透明の線(種類ごとに破線を変える)
+            label: "", data: labels.map(r => (r <= s.through ? x.t.byRound[r - 1]?.[f] ?? null : null)), borderColor: css(`--rf${x.k}`), borderWidth: 1.8,
+            borderDash: DASH[i % 6], pointRadius: 0, pointHoverRadius: 0, tension: 0, order: 2,
+          }));
           return [
-            { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 3 : 2.5, pointHoverRadius: 4, order: 1 }, // 外側=シーズン色
+            ...refsDs,
+            { ...base, label: l, borderColor: col, backgroundColor: col, borderWidth: i === 0 ? 3 : 2.5, order: 1, // 外側=シーズン色。選択クラブは丸印つき
+              pointRadius: 3.5, pointBorderColor: col, pointBackgroundColor: css("--card"), pointBorderWidth: 1.5 },
             { ...base, label: "", borderColor: col, borderWidth: 1.5, order: 0, // 中心=監督色(監督ごとに区間の色を変える)
               segment: { borderColor: c => mgrColor(s, i, mgrIdx(s, c.p1DataIndex + 1)) } },
           ];
