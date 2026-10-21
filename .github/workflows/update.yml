@@ -1,5 +1,7 @@
 name: update-and-deploy
 
+# 本番(main)は https://<user>.github.io/jleague-compare/ 、試作(dev ブランチ)は同じサイトの /dev/ に載せる。
+# どのブランチの push でも「main + dev」を組み合わせて1回で公開するので、main に取り込むまで本番は変わらない。
 on:
   schedule:  # UTC。JST = UTC+9
     - cron: "30 7,10,12 * * 0,6"   # 土日 JST 16:30 / 19:30 / 21:30
@@ -11,8 +13,8 @@ on:
         required: false
         default: ""
   push:
-    branches: [main]
-    paths: [index.html, app.js, style.css, .github/workflows/update.yml]
+    branches: [main, dev]
+    paths: [index.html, app.js, style.css, "data/**", .github/workflows/update.yml]
 
 permissions:
   contents: write
@@ -30,21 +32,34 @@ jobs:
       name: github-pages
     steps:
       - uses: actions/checkout@v4
+        with: { ref: main, path: site }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Fetch data
+      - name: Fetch data (main only)
         if: github.event_name != 'push'
+        working-directory: site
         env:
           SEASONS: ${{ inputs.seasons }}
         run: python scripts/fetch.py ${SEASONS:+--seasons $SEASONS}
       - name: Commit if changed
+        working-directory: site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data
           git diff --cached --quiet || (git commit -m "data: update" && git push)
+      - name: Add dev branch (if it exists)
+        working-directory: site
+        run: |
+          if git fetch --depth=1 origin dev; then git worktree add --detach ../site-dev FETCH_HEAD; fi
       - name: Stage site
-        run: mkdir _site && cp -r index.html app.js style.css data _site/
+        run: |
+          mkdir _site
+          cp -r site/index.html site/app.js site/style.css site/data _site/
+          if [ -d site-dev ]; then
+            mkdir _site/dev
+            cp -r site-dev/index.html site-dev/app.js site-dev/style.css site-dev/data _site/dev/
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }
