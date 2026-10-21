@@ -74,3 +74,7 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .slider.on input::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -8px; }
 .slider.on input::-moz-range-thumb { width: 20px; height: 20px; }
 .slider.on label { color: var(--accent); }
+.slider { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; align-items: center; text-align: center; }
+.slider label { font-size: .85rem; }
+.pad { height: 52px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--muted); font-size: .7rem; touch-action: none; user-select: none; -webkit-user-select: none; }
+.pad.on { background: var(--accent); border-color: var(--accent); color: #fff; }

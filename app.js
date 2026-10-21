@@ -22,10 +22,17 @@ async function init() {
   fillClubs();
   $("#league").onchange = () => { fillClubs(true); refresh(); };
   $("#club").onchange = () => { club = $("#club").value; refresh(); };
-  $("#round").oninput = e => { hideTips(); setRound(+e.target.value); };
-  const sl = $(".slider"), on = v => () => sl.classList.toggle("on", v);
-  for (const ev of ["pointerdown", "touchstart"]) $("#round").addEventListener(ev, on(true), { passive: true });
-  for (const ev of ["pointerup", "pointercancel", "touchend", "touchcancel", "blur"]) $("#round").addEventListener(ev, on(false));
+  // 左右の1/3エリア: 横ドラッグで相対移動。エリア幅(=画面1/3)分動かすと全節を移動できる
+  for (const pad of [$("#padL"), $("#padR")]) {
+    let x0, r0;
+    pad.onpointerdown = e => { pad.setPointerCapture(e.pointerId); x0 = e.clientX; r0 = round; pad.classList.add("on"); hideTips(); };
+    pad.onpointermove = e => {
+      if (!pad.hasPointerCapture(e.pointerId)) return;
+      const step = pad.clientWidth / Math.max(1, +$("#round").max - 1);
+      setRound(r0 + Math.round((e.clientX - x0) / step));
+    };
+    pad.onpointerup = pad.onpointercancel = () => pad.classList.remove("on");
+  }
   document.addEventListener("pointerdown", e => { if (e.target.tagName !== "CANVAS") hideTips(); });
   $("#round").onkeydown = e => e.stopPropagation();
   document.onkeydown = e => {
