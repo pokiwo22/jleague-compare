@@ -3,7 +3,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(), paceOff = new Set(), indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", zooms = [], indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 const load = (key, lg) => files[key + lg] ??= fetch(`data/${key}_${lg}.json?v=${encodeURIComponent(idx.updated)}`).then(r => (r.ok ? r.json() : null)).catch(() => null);
@@ -52,6 +52,11 @@ async function init() {
   $("#metric").onchange = () => { draw(); setRound(round); };
   if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(Boolean));
   indOn = new Set((q.get("ind") || "").split(",").filter(Boolean));
+  rkMode = q.get("rk") === "final" ? "final" : "at";
+  document.querySelectorAll('#zoomCtl input[name="zrk"]').forEach(i => {
+    i.checked = i.value === rkMode;
+    i.onchange = () => { rkMode = i.value; updateZoom(); setRound(round); };
+  });
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
   $("#paceBox").ontoggle = () => drawPace();
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
@@ -91,7 +96,7 @@ async function refresh() {
   const keys = idx.seasons.filter(s => picked.includes(s.key) && leagueOf(s, club));
   S = (await Promise.all(keys.map(async s => {
     const lg = leagueOf(s, club), d = await load(s.key, lg), t = d?.teams[club];
-    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams, mgr: t.mgr || [] };
+    return t && { key: s.key, label: s.label, lg, rounds: d.rounds, through: d.through, by: t.byRound, all: d.teams, mgr: t.mgr || [], matches: t.matches || [] };
   }))).filter(Boolean);
   const max = Math.max(1, ...S.map(s => s.rounds));
   $("#round").max = max;
@@ -100,6 +105,7 @@ async function refresh() {
   await loadPace();
   draw();
   mgrLegend();
+  drawZoom();
 }
 
 // 監督: mgr=[{r:その監督の最初の節,n:名前}]。節に応じた監督と、中心線の色(最初の監督=シーズン色、以降は別色)
@@ -126,9 +132,10 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}) })), 250);
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(rkMode === "final" ? { rk: "final" } : {}) })), 250);
   cards();
   Object.values(charts).forEach(moveCursor); // グラフ全再描画はせず、縦線(DOM)を動かすだけ
+  updateZoom();
 }
 
 function cards() {
@@ -163,6 +170,90 @@ function moveCursor(ch) {
   ch.cur.style.transform = `translateX(${ch.scales.x.getPixelForValue(round - 1)}px)`;
 }
 const cursor = { id: "cursor", afterLayout: moveCursor, afterDestroy: ch => ch.cur?.remove() };
+
+// ---- 拡大表示: 選んだ節の前後だけを広げ、折れ線の上に「結果色の丸(中に相手の順位)」を載せる ----
+const MIN_RANK_ROUND = 4; // 開幕直後(1〜3節)は順位に意味がないので「—」
+const WIN_HALF = 6;       // 選んだ節の前後6節(計13節)
+const RES = { w: "#15803d", d: "#facc15", l: "#b91c1c" };
+const rankMap = (s, n) => { // 第n節終了時点の順位(勝点→得失点→総得点)
+  s.rk ??= {};
+  return s.rk[n] ??= Object.fromEntries(Object.entries(s.all)
+    .map(([id, t]) => [id, t.byRound[n - 1]])
+    .sort((a, b) => b[1].points - a[1].points || b[1].gd - a[1].gd || b[1].gf - a[1].gf)
+    .map(([id], i) => [id, i + 1]));
+};
+const zoomWindow = s => { // まだ試合のない節を選んだときは、直近の試合のある範囲を出す
+  const start = Math.max(1, Math.min(Math.min(round, s.through) - WIN_HALF, s.rounds - 2 * WIN_HALF));
+  return [start, Math.min(s.rounds, start + 2 * WIN_HALF)];
+};
+
+const zoomMarks = { // 丸(結果色)+数字(相手の順位)+選んだ節の輪と縦線
+  id: "zoomMarks",
+  afterDatasetsDraw(ch) {
+    const z = ch.$z; if (!z?.pts) return; // 作成直後(データ未設定)は描かない
+    const c = ch.ctx, { left, right, top, bottom } = ch.chartArea, sx = ch.scales.x, sy = ch.scales.y;
+    const R = Math.max(6, Math.min(11, (sx.getPixelForValue(2) - sx.getPixelForValue(1)) / 2 - 1));
+    c.save();
+    c.beginPath(); c.rect(left - R - 4, top - R - 4, right - left + 2 * R + 8, bottom - top + 2 * R + 8); c.clip();
+    const cx = sx.getPixelForValue(round);
+    c.strokeStyle = css("--muted"); c.setLineDash([3, 3]); c.lineWidth = 1;
+    if (round >= sx.min && round <= sx.max) { c.beginPath(); c.moveTo(cx, top); c.lineTo(cx, bottom); c.stroke(); }
+    c.setLineDash([]);
+    c.textAlign = "center"; c.textBaseline = "middle"; c.font = `700 ${Math.round(R * 1.05)}px system-ui, sans-serif`;
+    for (const p of z.pts) {
+      if (p.x < sx.min || p.x > sx.max) continue;
+      const x = sx.getPixelForValue(p.x), y = sy.getPixelForValue(p.y);
+      c.beginPath(); c.arc(x, y, R, 0, 7); c.fillStyle = RES[p.res]; c.fill();
+      c.lineWidth = 1.5; c.strokeStyle = css("--card"); c.stroke();
+      c.fillStyle = p.res === "d" ? "#1c1917" : "#fff";
+      c.fillText(rkMode === "final" || p.x >= MIN_RANK_ROUND ? (p.rk ?? "—") : "—", x, y + 0.5);
+      if (p.x === round) { c.beginPath(); c.arc(x, y, R + 3.5, 0, 7); c.lineWidth = 2.5; c.strokeStyle = css("--fg"); c.stroke(); }
+    }
+    c.restore();
+  },
+};
+
+function drawZoom() {
+  zooms.forEach(z => z.chart.destroy());
+  zooms = [];
+  $("#zoomBody").innerHTML = S.map((s, i) => `<div class="zrow"><h4>${s.label}（${s.lg}）</h4><div class="zbox"><canvas id="zc${i}"></canvas></div></div>`).join("");
+  const f = $("#metric").value, fg = css("--muted");
+  S.forEach((s, i) => {
+    const col = css(`--c${i % 6}`), line = [];
+    for (let r = 1; r <= s.through; r++) line.push({ x: r, y: s.by[r - 1][f] });
+    const chart = new Chart($(`#zc${i}`), {
+      type: "line", plugins: [zoomMarks],
+      data: { datasets: [{ data: line, borderColor: col, borderWidth: 2, pointRadius: 0, tension: 0 }] },
+      options: {
+        animation: false, maintainAspectRatio: false, events: [], layout: { padding: { top: 8, bottom: 2 } },
+        scales: { x: { type: "linear", ticks: { color: fg, stepSize: 1, callback: v => (Number.isInteger(v) ? v : "") }, grid: { color: css("--line") } },
+                  y: { ticks: { color: fg, maxTicksLimit: 4 }, grid: { color: css("--line") } } },
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      },
+    });
+    zooms.push({ s, i, chart, f, line });
+  });
+  updateZoom();
+}
+
+function updateZoom() {
+  for (const z of zooms) {
+    const { s, chart, f, line } = z, [a, b] = zoomWindow(s);
+    z.pts = s.matches.map(([r, opp, home, gf, ga]) => ({
+      x: r, y: s.by[r - 1]?.[f], res: gf > ga ? "w" : gf < ga ? "l" : "d",
+      rk: rkMode === "final" ? rankMap(s, s.through)[opp] : r >= MIN_RANK_ROUND ? rankMap(s, r - 1)[opp] : null,
+    })).filter(p => p.y != null);
+    chart.$z = z;
+    const ys = line.filter(p => p.x >= a && p.x <= b).map(p => p.y);
+    const lo = Math.min(...ys), hi = Math.max(...ys), pad = Math.max(2, (hi - lo) * 0.25);
+    const sc = chart.options.scales;
+    sc.x.min = a - 0.7; sc.x.max = b + 0.7;
+    sc.y.min = ys.length ? Math.floor(lo - pad) : 0; sc.y.max = ys.length ? Math.ceil(hi + pad) : 1; // 目盛りが中途半端にならないよう整数に
+    chart.update("none");
+  }
+  const what = rkMode === "final" ? "相手の<b>最終順位</b>（未確定のシーズンは現時点）" : "相手の、その試合の<b>直前</b>の順位（1〜3節は—）";
+  $("#zoomNote").innerHTML = `丸の色: <span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> ／ 丸の中の数字＝${what} ／ 太い輪＝選んだ節 ／ 範囲は選んだ節の前後${WIN_HALF}節`;
+}
 
 function mgrLegend() {
   const rows = S.filter(s => s.mgr.length > 1).map(s => {
