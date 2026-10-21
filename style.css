@@ -78,3 +78,5 @@ h2 { font-size: .85rem; margin: 0 0 2px; }
 .slider label { font-size: .85rem; }
 .pad { height: 52px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--muted); font-size: .7rem; touch-action: none; user-select: none; -webkit-user-select: none; }
 .pad.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.box { height: 280px; }
+.chart { margin-bottom: 12px; }

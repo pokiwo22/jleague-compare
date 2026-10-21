@@ -155,10 +155,10 @@ function draw() {
         animation: false, maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         scales: {
-          x: { ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
+          x: { title: { display: true, text: "節", color: fg }, ticks: { color: fg, autoSkip: false, maxRotation: 0, callback(v) { const l = this.getLabelForValue(v); return l === 1 || l % 5 === 0 ? l : ""; } }, grid: { color: grid } },
           y: { ticks: { color: fg }, grid: { color: c => (f === "gd" && c.tick.value === 0 ? "#dc2626" : grid), lineWidth: c => (f === "gd" && c.tick.value === 0 ? 2 : 1) } },
         },
-        plugins: { legend: { display: id === "chPts", labels: { color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } } },
+        plugins: { legend: { labels: { color: css("--fg"), boxWidth: 14, boxHeight: 3, font: { size: 11 } } } },
       },
     });
     bind($("#" + id));
