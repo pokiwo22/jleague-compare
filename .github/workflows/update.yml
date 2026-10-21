@@ -1,0 +1,51 @@
+name: update-and-deploy
+
+on:
+  schedule:  # UTC。JST = UTC+9
+    - cron: "30 7,10,12 * * 0,6"   # 土日 JST 16:30 / 19:30 / 21:30
+    - cron: "30 12 * * 1-5"        # 平日 JST 21:30
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "取得シーズン(空白区切り 例: 2021 2022 2023 2024 2025 2026)。空なら今季のみ。過去シーズン一括取得に使う"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+    paths: [index.html, app.js, style.css, .github/workflows/update.yml]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Fetch data
+        if: github.event_name != 'push'
+        env:
+          SEASONS: ${{ inputs.seasons }}
+        run: python scripts/fetch.py ${SEASONS:+--seasons $SEASONS}
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || (git commit -m "data: update" && git push)
+      - name: Stage site
+        run: mkdir _site && cp -r index.html app.js style.css data _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: _site }
+      - uses: actions/deploy-pages@v4
