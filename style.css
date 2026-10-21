@@ -137,7 +137,6 @@ details > .controls { margin: 8px 0 6px; }
 #paceBox > summary { margin: 0 -8px; padding: 6px 8px; background: var(--tint); border-radius: 5px; }
 #paceBox[open] > summary { border-radius: 5px 5px 0 0; border-bottom: 1px solid var(--tint-line); margin-bottom: 6px; }
 
-.devbar { background: #0f766e; color: #fff; font-size: .7rem; font-weight: 600; text-align: center; padding: 3px 6px; border-radius: 4px; margin-bottom: 6px; }
 
 /* 拡大表示 */
 #zoomBox { font-size: .85rem; margin: 6px 0; }
