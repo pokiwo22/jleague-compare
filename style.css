@@ -198,3 +198,9 @@ details > .controls { margin: 8px 0 6px; }
 .sq.h::after { content: "H"; }
 .sq.a::after { content: "A"; }
 .sq { padding-bottom: 3px; box-sizing: border-box; } /* 数字を少し上へ(右下のH/Aと重ならないように) */
+
+/* 案: 大きな半透明の H / A をマス全体に重ねる(後ろの数字と色が透けて見える) */
+.sq { padding-bottom: 0; }
+.sq::after { inset: 0; right: auto; bottom: auto; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 900; color: rgba(255, 255, 255, .38); text-shadow: none; pointer-events: none; }
+.sq.d::after { color: rgba(0, 0, 0, .22); }
