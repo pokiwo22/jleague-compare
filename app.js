@@ -216,7 +216,7 @@ function renderTier() {
         : Math.abs(d) <= 0.4 ? "相手を選ばず、満遍なく取るタイプ" : "標準的（上位より下位から多く取る）";
       if (g(T[0]) >= 3) type += ppg(T[0]) >= 1.4 ? "／トップ3にも強い" : ppg(T[0]) <= 0.5 ? "／トップ3からは、ほとんど取れていない" : "";
     }
-    return `<div class="trow"><h4>${s.label}（${s.lg}）<span class="ttype">${type}</span></h4><div class="tgrid">${cells}</div></div>`;
+    return `<div class="trow"><h4><i class="sbar" style="background:var(--c${S.indexOf(s) % 6})"></i>${s.label}（${s.lg}）<span class="ttype">${type}</span></h4><div class="tgrid">${cells}</div></div>`;
   }).join("") + `<div class="note2">相手を、そのシーズンの<b>最終順位</b>で4つに分けています（今季は現時点の順位）。選んだ節までの成績です。勝点率＝1試合あたりの勝点。タイプは、上位（トップ3+上位）と下位への勝点率による目安です。</div>`;
 }
 
