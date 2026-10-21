@@ -194,7 +194,6 @@ function draw() {
         },
       },
     });
-    bind($("#" + id));
   }
 }
 
@@ -205,16 +204,6 @@ function hideTips() {
     c.tooltip.setActiveElements([], { x: 0, y: 0 });
     c.update("none");
   }
-}
-
-function bind(cv) {
-  cv.onwheel = e => { e.preventDefault(); setRound(round + (e.deltaY > 0 ? 1 : -1)); };
-  let x0, r0;
-  cv.ontouchstart = e => { x0 = e.touches[0].clientX; r0 = round; };
-  cv.ontouchmove = e => {
-    const step = cv.clientWidth / Math.max(1, +$("#round").max);
-    setRound(r0 + Math.round((e.touches[0].clientX - x0) / step));
-  };
 }
 
 init();
