@@ -348,7 +348,7 @@ async function loadPace() {
     past.push({ key: s.key, label: s.label, rounds: d.rounds, s: { all: d.teams, rk: {} }, catFinal: { 1: [L[0]], 2: [L[1]], 3: [L[2]], t: L.slice(0, 3), d: L.slice(-3) } });
   }
   pace = { label: cur.label, lg, by: ct.byRound, through: cd.through, rounds: cd.rounds, past };
-  $("#refSeasons").innerHTML = "<span>対象シーズン:</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
+  $("#refSeasons").innerHTML = "<span>対象:</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
   $("#refSeasons").querySelectorAll("input").forEach(i => {
     i.onchange = () => { i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); renderRefs(); drawPace(); };
   });

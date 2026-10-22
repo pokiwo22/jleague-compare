@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>【試作】Jリーグ 節ごと比較</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="style.css?v=n3">
+<link rel="stylesheet" href="style.css?v=n6">
 </head>
 <body>
 <main>
@@ -30,7 +30,7 @@
   <details id="tierBox" open><summary><span>順位帯ごとの成績</span><span class="hint">▼ タップ or クリック</span></summary>
     <div id="tierBody"></div></details>
 
-  <details id="paceBox"><summary><span>過去の上位・降格クラブとのペース比較</span><span class="hint">▼ タップ or クリック</span></summary><section class="chart" id="paceSec"><div class="box"><canvas id="chPace"></canvas></div><div id="paceMode" class="refs"><span>分け方:</span><label><input type="radio" name="pm" value="final">最終順位</label><label><input type="radio" name="pm" value="at">第<output id="pmN">11</output>節時点の順位</label></div><div id="refs"></div><div id="refSeasons" class="refs"></div><div id="paceLegend"></div></section></details>
+  <details id="paceBox"><summary><span>過去の上位・降格クラブとのペース比較</span><span class="hint">▼ タップ or クリック</span></summary><section class="chart" id="paceSec"><div id="refSeasons" class="refs"></div><div class="box"><canvas id="chPace"></canvas></div><div id="paceMode" class="refs"><span>分け方:</span><label><input type="radio" name="pm" value="final">最終順位</label><label><input type="radio" name="pm" value="at">第<output id="pmN">11</output>節時点の順位</label></div><div id="refs"></div><div id="paceLegend"></div></section></details>
 
   <section class="slider">
     <div class="pad" id="pad"><span class="thumb"></span><label>第<output id="roundOut">1</output>節時点 <small>◀ ここを横にドラッグ ▶</small></label></div>
@@ -41,6 +41,6 @@
 © 2026 pokiwo22（プログラム・画面デザイン）。無断転載・複製・商用利用を禁止します。データの権利は各権利者に帰属します。<br>操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=n3"></script>
+<script src="app.js?v=n6"></script>
 </body>
 </html>
