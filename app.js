@@ -88,8 +88,7 @@ async function init() {
     i.onchange = () => { rkMode = i.value; renderStrips(); setRound(round); };
   });
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
-  $("#paceBox").ontoggle = () => { drawPace(); fitPace(); };
-  addEventListener("resize", () => fitPace());
+  $("#paceBox").ontoggle = () => drawPace();
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
     const i = e.target;
     if (i.dataset.avg) i.checked ? avgOff.delete(i.dataset.avg) : avgOff.add(i.dataset.avg);
@@ -369,23 +368,6 @@ function renderRefs() {
       inc.map(p => `<div class="pr"><span class="py">${p.label}</span>` + catOf(p)[k].map(x =>
         `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${x.rk}位 ${x.t.name}</label>`).join("") + "</div>").join("")) + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
-  fitPace();
-}
-
-// 文字サイズを、折り返さずに横幅いっぱいに収まる最大値に合わせる(同じグループは同じ大きさ)
-function fitGroup(els, max = 17, min = 7) {
-  els = [...els].filter(e => e.clientWidth > 0);
-  if (!els.length) return;
-  const fits = px => { els.forEach(e => (e.style.fontSize = px + "px")); return els.every(e => e.scrollWidth <= e.clientWidth + 1); };
-  if (fits(max)) return;
-  let lo = min, hi = max;
-  while (hi - lo > 0.4) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; }
-  fits(lo);
-}
-function fitPace() {
-  if (!$("#paceBox").open) return;
-  fitGroup(document.querySelectorAll("#refSeasons"), 16);
-  document.querySelectorAll("#refs .sub").forEach(s => fitGroup(s.querySelectorAll(".pr"), 16));
 }
 
 const endLabels = { // 個別線の右端にクラブ名(シーズン下2桁つき)を描く。縦に重なる分は少しずつずらす

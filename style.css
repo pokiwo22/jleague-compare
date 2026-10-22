@@ -261,7 +261,7 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .note3 { font-size: .58rem; color: var(--muted); }
 
 /* ペース比較: 対象シーズン/分け方/個別クラブ。折り返さず、文字は幅いっぱい(サイズは自動調整) */
-#refSeasons { display: flex; flex-wrap: nowrap; gap: .3em; overflow: hidden; margin: 4px 0 6px; font-size: 14px; }
+#refSeasons { display: flex; flex-wrap: nowrap; gap: .3em; overflow: hidden; margin: 4px 0 6px; font-size: 9.4px; }
 #refSeasons .lab { flex: 0 0 auto; white-space: nowrap; color: var(--muted); }
 #refSeasons label { flex: 1 1 auto; justify-content: center; white-space: nowrap; font-size: inherit; padding: .12em .4em; min-height: 0; gap: .25em; }
 #refSeasons input { width: .85em; height: .85em; margin: 0; }
@@ -271,7 +271,7 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .sh { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
 #refs .sub .sh .sn { font-size: .95rem; }
 #refs .sub .sh label { font-size: .8rem; padding: 3px 10px; }
-#refs .sub .pr { display: flex; flex-wrap: nowrap; align-items: center; gap: .3em; overflow: hidden; margin: 3px 0; font-size: 14px; }
+#refs .sub .pr { display: flex; flex-wrap: nowrap; align-items: center; gap: .3em; overflow: hidden; margin: 3px 0; font-size: 9.4px; }
 #refs .sub .pr .py { flex: 0 0 auto; font-weight: 700; color: var(--muted); min-width: 3em; }
 #refs .sub .pr label { flex: 1 1 auto; justify-content: center; white-space: nowrap; font-size: inherit; padding: .1em .35em; min-height: 0; gap: .25em; }
 #refs .sub .pr input { width: .85em; height: .85em; margin: 0; }
