@@ -88,7 +88,8 @@ async function init() {
     i.onchange = () => { rkMode = i.value; renderStrips(); setRound(round); };
   });
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
-  $("#paceBox").ontoggle = () => drawPace();
+  $("#paceBox").ontoggle = () => { drawPace(); fitPace(); };
+  addEventListener("resize", () => fitPace());
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
     const i = e.target;
     if (i.dataset.avg) i.checked ? avgOff.delete(i.dataset.avg) : avgOff.add(i.dataset.avg);
@@ -349,7 +350,7 @@ async function loadPace() {
     past.push({ key: s.key, label: s.label, rounds: d.rounds, s: { all: d.teams, rk: {} }, catFinal: bands(L.map((x, i) => ({ ...x, rk: i + 1 }))) });
   }
   pace = { label: cur.label, lg, by: ct.byRound, through: cd.through, rounds: cd.rounds, past };
-  $("#refSeasons").innerHTML = "<span>対象:</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
+  $("#refSeasons").innerHTML = "<span class=\"lab\">対象</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
   $("#refSeasons").querySelectorAll("input").forEach(i => {
     i.onchange = () => { i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); renderRefs(); drawPace(); };
   });
@@ -362,11 +363,29 @@ function renderRefs() {
   const inc = pace.past.filter(p => !paceOff.has(p.key));
   const top = Object.entries(REF).map(([k, name]) => `<label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}</label>`).join("");
   const subs = Object.entries(REF).filter(([k]) => refs.has(k)).map(([k]) =>
-    `<div class="sub"><b class="sn" style="color:var(--rf${k})">${refName(k)}</b>` +
-    `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label>` +
-    (k === "m" ? `<span class="note3">中位は、クラブ数が多いので、平均のみ</span>` :
-      inc.flatMap(p => catOf(p)[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${p.label.replace(/^20/, "")} ${x.t.name} ${x.rk}位</label>`)).join("")) + "</div>").join("");
+    `<div class="sub"><div class="sh"><b class="sn" style="color:var(--rf${k})">${refName(k)}</b>` +
+    `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label></div>` +
+    (k === "m" ? `<div class="note3">中位は、クラブ数が多いので、平均のみ</div>` :
+      inc.map(p => `<div class="pr"><span class="py">${p.label}</span>` + catOf(p)[k].map(x =>
+        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${x.rk}位 ${x.t.name}</label>`).join("") + "</div>").join("")) + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
+  fitPace();
+}
+
+// 文字サイズを、折り返さずに横幅いっぱいに収まる最大値に合わせる(同じグループは同じ大きさ)
+function fitGroup(els, max = 17, min = 7) {
+  els = [...els].filter(e => e.clientWidth > 0);
+  if (!els.length) return;
+  const fits = px => { els.forEach(e => (e.style.fontSize = px + "px")); return els.every(e => e.scrollWidth <= e.clientWidth + 1); };
+  if (fits(max)) return;
+  let lo = min, hi = max;
+  while (hi - lo > 0.4) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; }
+  fits(lo);
+}
+function fitPace() {
+  if (!$("#paceBox").open) return;
+  fitGroup(document.querySelectorAll("#refSeasons"), 16);
+  document.querySelectorAll("#refs .sub").forEach(s => fitGroup(s.querySelectorAll(".pr"), 16));
 }
 
 const endLabels = { // 個別線の右端にクラブ名(シーズン下2桁つき)を描く。縦に重なる分は少しずつずらす
