@@ -397,8 +397,8 @@ const endLabels = { // 個別線の右端にクラブ名(シーズン下2桁つ�
       const lim = n === items.length - 1 ? ch.chartArea.bottom - 2 : items[n + 1].y - 11;
       if (items[n].y > lim) items[n].y = lim;
     }
-    c.save(); c.font = "10px system-ui, sans-serif"; c.textAlign = "right"; c.textBaseline = "middle";
-    items.forEach(it => { c.fillStyle = it.col; c.fillText(it.t, Math.min(it.x - 2, ch.chartArea.right - 1), it.y); });
+    c.save(); c.font = "bold 11px system-ui, sans-serif"; c.textAlign = "right"; c.textBaseline = "middle"; c.lineJoin = "round"; c.lineWidth = 3.5; c.strokeStyle = getComputedStyle(document.body).backgroundColor;
+    items.forEach(it => { const x = Math.min(it.x - 2, ch.chartArea.right - 1), y = it.y - 7; c.strokeText(it.t, x, y); c.fillStyle = it.col; c.fillText(it.t, x, y); }); // 線に重ならないよう少し上へ、背景色の縁取り付き
     c.restore();
   },
 };
@@ -418,7 +418,7 @@ function drawPace() {
     if (xs.length && !avgOff.has(k)) ds.push({ label: `${refName(k)}${paceMode === "at" ? "だったクラブ" : "のクラブ"}の平均`, data: labels.map(r => { const v = xs.map(x => val(x, r)).filter(y => y != null); return v.length ? avg(v) : null; }),
       borderColor: css(`--rf${k}`), borderWidth: 2.5, borderDash: [6, 3], pointRadius: 0, tension: 0, order: 1 });
     inc.forEach((p, si) => catOf(p)[k].filter(x => indOn.has(`${p.key}|${x.tid}`)).forEach(x =>
-      ds.push({ label: "", endLabel: `${p.label.slice(2)} ${x.t.name}`, data: labels.map(r => val(x, r) ?? null), borderColor: css(`--rf${k}`), borderWidth: 1.5,
+      ds.push({ label: "", endLabel: `${p.label.slice(2)} ${x.t.name}${paceMode === "at" ? ` 最終${rankMap(p.s, p.rounds)[x.tid]}位` : ""}`, data: labels.map(r => val(x, r) ?? null), borderColor: css(`--rf${k}`), borderWidth: 1.5,
         borderDash: [[], [8, 4], [2, 3], [10, 3, 2, 3], [1, 4], [12, 2]][si % 6], pointRadius: 0, tension: 0, order: 2 })));
   }
   const c0 = css("--c0");
