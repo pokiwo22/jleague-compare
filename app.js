@@ -366,7 +366,7 @@ function renderRefs() {
     `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label></div>` +
     (k === "m" ? `<div class="note3">中位は、クラブ数が多いので、平均のみ</div>` :
       inc.map(p => `<div class="pr"><span class="py">${p.label}</span>` + catOf(p)[k].map(x =>
-        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}><span>${x.rk}位</span><span class="nm" style="color:${CLUB_COLOR[x.tid] ? textColor(CLUB_COLOR[x.tid]) : "inherit"}">${x.t.name}</span></label>`).join("") + "</div>").join("")) + "</div>").join("");
+        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}><span class="rkn">${x.rk}</span><span class="nm" style="color:${CLUB_COLOR[x.tid] ? textColor(CLUB_COLOR[x.tid]) : "inherit"}">${x.t.name}</span></label>`).join("") + "</div>").join("")) + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
 }
 
@@ -412,7 +412,7 @@ function drawPace() {
   ds.push({ label: `${pace.label} ${idx.teams[club]}（選択中）`, data: labels.map(r => (r <= pace.through ? pace.by[r - 1][f] : null)), borderColor: c0, backgroundColor: c0,
     borderWidth: 3.5, pointRadius: 0, tension: 0, order: 0 }); // 選択クラブ=一番太い青線(丸印はなし)
   charts.chPace = new Chart($("#chPace"), { type: "line", plugins: [cursor, endLabels], data: { labels, datasets: ds }, options: scaleOpts(f) });
-  $("#paceLegend").innerHTML = `<div>分け方: <b>${paceMode === "at" ? `第${round}節時点の順位` : "最終順位"}</b></div><div>太い青線＝選んだクラブ（今季）</div><div>太い破線＝過去の該当クラブの平均</div><div>細線＝個別クラブ（端に年と名前）</div><div>34節制のシーズンは34節まで</div>`;
+  $("#paceLegend").innerHTML = `<div>分け方: <b>${paceMode === "at" ? `第${round}節時点の順位` : "最終順位"}</b></div><div>太い青線＝選んだクラブ（今季）</div><div>太い破線＝過去の該当クラブの平均</div><div>枠の数字＝順位 ／ 細線＝個別クラブ</div><div>34節制のシーズンは34節まで</div>`;
 }
 
 function hideTips() {

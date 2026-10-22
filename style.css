@@ -307,3 +307,13 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr .py { font-size: 11px; }
 #refs .sub .pr label { font-size: 8.6px; padding: 0; gap: 0; }
 #refs .sub .pr label .nm { font-weight: 700; }
+
+#refs .sub .pr label { font-size: 10.8px; gap: 2px; }
+#refs .sub .pr label input { width: 9px; height: 9px; }
+#refs .sub .pr label .rkn { color: var(--muted); font-weight: 700; }
+#refSeasons, #refSeasons label { font-size: 12.5px; }
+#refs .toprow label, #refs .sub .sh label { font-size: 13px; }
+#refs .sub .sh .sn { font-size: 15px; }
+#refs .sub .pr .py { font-size: 12px; }
+#paceLegend { font-size: 13px; }
+#refs .sub .pr label { font-size: 10.2px; }
