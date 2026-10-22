@@ -148,7 +148,7 @@ details > .controls { margin: 8px 0 6px; }
 .zrow h4 { font-size: .75rem; margin: 0 0 2px; }
 .zbox { position: relative; height: 150px; }
 .lg { color: #fff; padding: 1px 6px; border-radius: 4px; font-size: .62rem; }
-.lg.w { background: #15803d; } .lg.l { background: #b91c1c; } .lg.d { background: #facc15; color: #1c1917; }
+.lg.w { background: #15803d; } .lg.l { background: #b91c1c; } .lg.d { background: #a16207; color: #fff; }
 .note2 { font-size: .65rem; color: var(--muted); line-height: 1.7; margin-top: 6px; }
 
 /* 上位・中位・下位への成績 */
@@ -175,7 +175,7 @@ details > .controls { margin: 8px 0 6px; }
 .slab { flex: 0 0 30px; font-size: 9px; color: var(--muted); text-align: right; }
 .sgrid { flex: 1; display: grid; grid-template-columns: repeat(var(--c), 1fr); gap: 2px; }
 .sq { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: clamp(7px, 2.5vw, 11px); font-weight: 700; line-height: 1; color: #fff; border-radius: 3px; white-space: nowrap; }
-.sq.w { background: #15803d; } .sq.l { background: #b91c1c; } .sq.d { background: #facc15; color: #1c1917; }
+.sq.w { background: #15803d; } .sq.l { background: #b91c1c; } .sq.d { background: #a16207; color: #fff; }
 .sq.a { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .35); }
 .sq.dim { opacity: .28; }
 .sq.now { transform: scale(1.4); z-index: 2; outline: 2px solid var(--fg); border-radius: 3px; opacity: 1; position: relative; }
@@ -278,4 +278,3 @@ details > .controls { margin: 8px 0 6px; }
 
 /* 相手の順位の数字: トップ3=金 / 上位=銀 / それ以外=白 */
 .sq.rk0 { color: #ffd34d; text-shadow: 0 0 2px rgba(0,0,0,.8); } .sq.rk1 { color: #dfe3e8; text-shadow: 0 0 2px rgba(0,0,0,.8); }
-.sq.d.rk0 { color: #8a5a00; text-shadow: none; } .sq.d.rk1 { color: #6b7280; text-shadow: none; }
