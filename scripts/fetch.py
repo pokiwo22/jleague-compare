@@ -208,9 +208,9 @@ def build(rows, season, league):
             by.append({"round": n, "played": len(done), "points": 3 * w + d, "w": w, "d": d,
                        "l": len(done) - w - d, "gf": gf, "ga": ga, "gd": gf - ga,
                        "pending": sum(1 for x in lst if x[0] <= n and x[4])})
-        # 各試合: [節, 相手ID, ホーム=1/アウェイ=0, 得点, 失点](消化済みのみ)。画面の「対戦相手の順位と結果」用
+        # 各試合: [節, 相手ID, ホーム=1/アウェイ=0, 得点, 失点](未消化は 得点/失点=null)。画面の「対戦相手の順位と結果」用
         teams[tid] = {"name": names[tid], "byRound": by,
-                      "matches": sorted([[x[0], x[5], x[6], x[2], x[3]] for x in lst if x[1]], key=lambda m: m[0])}
+                      "matches": sorted([[x[0], x[5], x[6], x[2], x[3]] for x in lst], key=lambda m: m[0])}  # 未消化は得点/失点が null
     return {"season": label(season), "key": str(season), "league": league, "rounds": rounds,
             "through": through, "teams": teams}
 
