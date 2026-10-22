@@ -238,3 +238,8 @@ details > .controls { margin: 8px 0 6px; }
 .sq.u::after { color: var(--muted); text-shadow: none; }
 .lg.u { padding: 0 6px; }
 #paceMode { margin: 6px 0 2px; }
+
+/* 勝敗の帯: 1シーズン3段・マスを大きく(約23px)・数字も大きく */
+.sq { font-size: clamp(10px, 3.6vw, 15px); }
+.sq::after { font-size: 7.5px; right: 2px; }
+.sgrid { gap: 3px; }
