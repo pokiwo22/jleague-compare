@@ -324,3 +324,6 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr .py { position: sticky; left: 0; z-index: 1; flex: 0 0 38px; background: var(--bg, #fff); font-size: 13px; display: flex; align-items: center; }
 #refs .sub .pr label { flex: 0 0 84px; width: 84px; height: 34px; padding: 0 4px; gap: 4px; font-size: 13.5px; justify-content: flex-start; }
 #refs .sub .pr label input { width: 13px; height: 13px; }
+
+#refs .sub .pr label { overflow: visible; }
+#refs .sub .pr label span { white-space: nowrap; }

@@ -88,7 +88,7 @@ async function init() {
     i.onchange = () => { rkMode = i.value; renderStrips(); setRound(round); };
   });
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
-  $("#paceBox").ontoggle = () => drawPace();
+  $("#paceBox").ontoggle = () => { drawPace(); fitChips(); };
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
     const i = e.target;
     if (i.dataset.avg) i.checked ? avgOff.delete(i.dataset.avg) : avgOff.add(i.dataset.avg);
@@ -368,7 +368,18 @@ function renderRefs() {
       `<div class="rows">` + inc.map(p => `<div class="pr"><span class="py">${p.label}</span>` + catOf(p)[k].map(x =>
         `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}><span class="rkn">${x.rk}</span><span class="nm" style="color:${CLUB_COLOR[x.tid] ? textColor(CLUB_COLOR[x.tid]) : "inherit"}">${x.t.name}</span></label>`).join("") + "</div>").join("") + "</div>") + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
+  fitChips();
 }
+
+// 個別クラブの枠: この端末の実際の文字幅で一番長い名前に合わせて、全部の枠を同じ大きさにする(文字が欠けない)
+function fitChips() {
+  const L = [...document.querySelectorAll("#refs .pr label")];
+  if (!L.length) return;
+  L.forEach(l => (l.style.flex = "0 0 auto", l.style.width = "max-content"));
+  const w = Math.ceil(Math.max(84, ...L.map(l => l.offsetWidth))) + 6;
+  L.forEach(l => (l.style.flex = `0 0 ${w}px`, l.style.width = `${w}px`));
+}
+document.fonts?.ready.then(() => fitChips());
 
 const endLabels = { // 個別線の右端にクラブ名(シーズン下2桁つき)を描く。縦に重なる分は少しずつずらす
   id: "endLabels",
