@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>【試作】Jリーグ 節ごと比較</title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="stylesheet" href="style.css?v=n32">
+<link rel="stylesheet" href="style.css?v=n33">
 </head>
 <body>
 <main>
@@ -26,7 +26,7 @@
   <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="points">勝ち点</option><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select></h2><div class="box"><canvas id="chPts"></canvas></div><div id="mgrLegend"></div>
     </section>
 
-  <details id="stripBox" open><summary><span>対戦記録</span><span class="hint">▼ タップ or クリック</span></summary>
+  <details id="stripBox"><summary><span>対戦記録</span><span class="hint">▼ タップ or クリック</span></summary>
     <div id="zoomCtl" class="refs"><span>対戦相手の順位:</span><label><input type="radio" name="zrk" value="at">対戦時点</label><label><input type="radio" name="zrk" value="final">最終順位</label></div>
     <div id="strips"></div></details>
 
@@ -44,6 +44,6 @@
 © 2026 pokiwo22（プログラム・画面デザイン）。無断転載・複製・商用利用を禁止します。データの権利は各権利者に帰属します。<br>操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=n32"></script>
+<script src="app.js?v=n33"></script>
 </body>
 </html>
