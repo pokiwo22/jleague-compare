@@ -2,14 +2,14 @@
   --bg: #fafaf9; --fg: #1c1917; --muted: #78716c; --card: #fff; --line: #e7e5e4; --accent: #2563eb;
   --c0: #2563eb; --c1: #dc2626; --c2: #16a34a; --c3: #d97706; --c4: #7c3aed; --c5: #0891b2;
   --pos: #15803d; --neg: #b91c1c;
-  --rf1: #ca8a04; --rf2: #64748b; --rf3: #c2410c; --rft: #ca8a04; --rfu: #64748b; --rfm: #0d9488; --rfd: #1f2937;
+  --rf1: #ca8a04; --rf2: #64748b; --rf3: #c2410c; --rft: #c58a00; --rfu: #0d9488; --rfm: #7b8794; --rfd: #a21caf; --bt: #c58a00; --bu: #0d9488; --bm: #7b8794; --bd: #a21caf;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #131211; --fg: #f5f5f4; --muted: #a8a29e; --card: #1c1917; --line: #3a3532; --accent: #60a5fa;
     --c0: #60a5fa; --c1: #f87171; --c2: #4ade80; --c3: #fbbf24; --c4: #a78bfa; --c5: #22d3ee;
     --pos: #4ade80; --neg: #f87171;
-    --rf1: #facc15; --rf2: #cbd5e1; --rf3: #fb923c; --rft: #facc15; --rfu: #cbd5e1; --rfm: #5eead4; --rfd: #e5e7eb;
+    --rf1: #facc15; --rf2: #cbd5e1; --rf3: #fb923c; --rft: #f5c542; --rfu: #5eead4; --rfm: #a3adb8; --rfd: #e879f9; --bt: #f5c542; --bu: #5eead4; --bm: #a3adb8; --bd: #e879f9;
   }
 }
 * { box-sizing: border-box; }
@@ -259,3 +259,15 @@ details > .controls { margin: 8px 0 6px; }
 #refs .toprow input { width: 12px; height: 12px; margin: 0; }
 
 #refs .sub .note3 { font-size: .58rem; color: var(--muted); }
+
+/* 順位帯の色: トップ3=金 / 上位=青緑 / 中位=灰 / 下位=赤紫(勝敗の緑・黄・赤と混ざらない色) */
+.b-t { --bc: var(--bt); } .b-u { --bc: var(--bu); } .b-m { --bc: var(--bm); } .b-d { --bc: var(--bd); }
+.bandkey { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 4px 0 8px; }
+.bk { display: inline-flex; align-items: center; gap: 4px; font-size: .64rem; font-weight: 700; padding: 2px 7px 2px 5px; border-radius: 999px; border: 1px solid var(--bc); background: color-mix(in srgb, var(--bc) 14%, var(--card)); white-space: nowrap; }
+.bk i { width: 9px; height: 9px; border-radius: 50%; background: var(--bc); }
+.bk small { font-weight: 400; color: var(--muted); font-size: .56rem; }
+.tcell[class*="b-"] { border-top: 4px solid var(--bc); }
+.tcell[class*="b-"] .tl { color: var(--fg); }
+.tcell[class*="b-"] .tl::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--bc); margin-right: 4px; }
+.sq[class*="b-"]::before { content: ""; position: absolute; left: 1px; top: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--bc); box-shadow: 0 0 0 1px #fff; }
+#refs .toprow label[class*="b-"] { border-left: 5px solid var(--bc); }

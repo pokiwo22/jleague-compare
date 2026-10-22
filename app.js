@@ -221,13 +221,19 @@ const rankMap = (s, n) => { // 第n節終了時点の順位(勝点→得失点�
 };
 // ---- 順位帯ごとの成績: 相手を「そのシーズンの最終順位」で トップ3 / 上位 / 中位 / 下位 に分けて、勝・分・負を集計 ----
 // トップ3=1〜3位、上位=4位〜上位1/3、下位=下位1/3、中位=その間(J1/20クラブなら 1-3 / 4-7 / 8-13 / 14-20)
+const BAND_KEYS = ["t", "u", "m", "d"], BAND_NOTE = ["優勝争い", "", "", "残留争い"];
+const bandKey = (rank, n) => (rank == null ? "" : BAND_KEYS[tierOf(rank, n)]);
+// 順位帯の色キーと意味を並べた説明の一行(順位帯ごとの成績の枠・勝敗の帯の凡例で共通)
+const bandLegend = n => { const k = Math.ceil(n / 3), R = ["1〜3位", `4〜${k}位`, `${k + 1}〜${n - k}位`, `${n - k + 1}〜${n}位`], N = ["トップ3", "上位", "中位", "下位"];
+  return `<div class="bandkey">${N.map((nm, i) => `<span class="bk b-${BAND_KEYS[i]}"><i></i>${nm}<small>${R[i]}${BAND_NOTE[i] ? "・" + BAND_NOTE[i] : ""}</small></span>`).join("")}</div>`; };
 function tierOf(rank, n) { const k = Math.ceil(n / 3); return rank <= 3 ? 0 : rank <= k ? 1 : rank > n - k ? 3 : 2; }
 
 function renderTier() {
   const el = $("#tierBody");
   if (!el) return;
   const NAME = ["トップ3", "上位", "中位", "下位"];
-  el.innerHTML = S.filter(s => s.matches.length).map(s => {
+  const first = S.find(s => s.matches.length);
+  el.innerHTML = (first ? bandLegend(Object.keys(first.all).length) : "") + S.filter(s => s.matches.length).map(s => {
     const n = Object.keys(s.all).length, k = Math.ceil(n / 3), rk = rankMap(s, s.through);
     const T = [0, 1, 2, 3].map(() => ({ w: 0, d: 0, l: 0 }));
     for (const [r, opp, , gf, ga] of s.matches) {
@@ -237,7 +243,7 @@ function renderTier() {
     const g = t => t.w + t.d + t.l, pts = t => 3 * t.w + t.d, ppg = t => (g(t) ? pts(t) / g(t) : null);
     const sum = (...ts) => ({ w: ts.reduce((x, t) => x + t.w, 0), d: ts.reduce((x, t) => x + t.d, 0), l: ts.reduce((x, t) => x + t.l, 0) });
     const range = ["1〜3位", `4〜${k}位`, `${k + 1}〜${n - k}位`, `${n - k + 1}〜${n}位`];
-    const cells = T.map((t, i) => `<div class="tcell"><div class="tl">${NAME[i]}<small>${range[i]}</small></div>
+    const cells = T.map((t, i) => `<div class="tcell b-${BAND_KEYS[i]}"><div class="tl">${NAME[i]}<small>${range[i]}</small></div>
       <div class="tbar">${g(t) ? `<i class="w" style="flex:${t.w}"></i><i class="d" style="flex:${t.d}"></i><i class="l" style="flex:${t.l}"></i>` : ""}</div>
       <div class="tn">${t.w}勝${t.d}分${t.l}敗<br>勝点率 <b>${ppg(t) == null ? "—" : ppg(t).toFixed(2)}</b></div></div>`).join("");
     // タイプ判定(目安): 全体の強さ(勝点率)と、上位(1〜上位帯)/下位への差の両方で見る。上位・下位が各3試合未満のうちは出さない
@@ -290,10 +296,11 @@ function renderStrips() {
       const res = !played ? "u" : gf > ga ? "w" : gf < ga ? "l" : "d";
       const rk = rkMode === "final" ? rankMap(s, s.through)[opp] : played && r >= MIN_RANK_ROUND ? rankMap(s, r - 1)[opp] : null;
       const nm = s.all[opp]?.name ?? opp, jp = { w: "勝ち", d: "分け", l: "負け", u: "未消化" }[res];
-      return `<div class="sq ${res} ${home ? "h" : "a"}" data-r="${r}" style="grid-column:${((r - 1) % cols) + 1};grid-row:${Math.ceil(r / cols)}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${played ? `${gf}-${ga} ` : ""}${jp}${rk ? `（相手は${rkMode === "final" ? "最終" : "その時"}${rk}位）` : ""}">${rk ?? "—"}</div>`;
+      const bk = bandKey(rk, Object.keys(s.all).length);
+      return `<div class="sq ${res} ${home ? "h" : "a"} ${bk ? "b-" + bk : ""}" data-r="${r}" style="grid-column:${((r - 1) % cols) + 1};grid-row:${Math.ceil(r / cols)}" title="第${r}節 ${home ? "ホーム" : "アウェイ"} vs ${nm} ${played ? `${gf}-${ga} ` : ""}${jp}${rk ? `（相手は${rkMode === "final" ? "最終" : "その時"}${rk}位）` : ""}">${rk ?? "—"}</div>`;
     }).join("");
     return `<div class="srow" style="--sc:var(--c${S.indexOf(s) % 6})"><div class="slab">${s.label.replace(/^20/, "")}</div><div class="sgrid" style="--c:${cols}">${q}</div></div>`;
-  }).join("") + `<div class="note2"><span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> <span class="lg u">未消化</span> ／ 数字＝相手の${rkMode === "final" ? "<b>最終順位</b>（未確定のシーズンは現時点）" : "その試合の<b>直前</b>の順位（1〜3節は—）"} ／ 右下の小さな文字: H＝ホーム・A＝アウェイ ／ 太い枠＝選んだ節 ／ 上から順に、節の若い順（3段）</div>`;
+  }).join("") + `<div class="note2"><span class="lg w">勝ち</span> <span class="lg d">分け</span> <span class="lg l">負け</span> <span class="lg u">未消化</span> ／ 数字＝相手の${rkMode === "final" ? "<b>最終順位</b>（未確定のシーズンは現時点）" : "その試合の<b>直前</b>の順位（1〜3節は—）"} ／ 右下の小さな文字: H＝ホーム・A＝アウェイ ／ 左上の小さな丸＝相手の順位帯（金＝トップ3・青緑＝上位・灰＝中位・赤紫＝下位） ／ 太い枠＝選んだ節 ／ 上から順に、節の若い順（3段）</div>`;
   dimStrips();
 }
 
@@ -360,7 +367,7 @@ async function loadPace() {
 function renderRefs() {
   if (!pace) return void ($("#refs").innerHTML = "");
   const inc = pace.past.filter(p => !paceOff.has(p.key));
-  const top = Object.entries(REF).map(([k, name]) => `<label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}</label>`).join("");
+  const top = Object.entries(REF).map(([k, name]) => `<label class="top b-${k}"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}</label>`).join("");
   const subs = Object.entries(REF).filter(([k]) => refs.has(k)).map(([k]) =>
     `<div class="sub"><b class="sn" style="color:var(--rf${k})">${refName(k)}</b>` +
     `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label>` +
