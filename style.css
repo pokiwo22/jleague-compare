@@ -338,3 +338,6 @@ details > .controls { margin: 8px 0 6px; }
 #seasons { gap: 8px; }
 #seasons label { font-size: 1.15rem; font-weight: 600; padding: 7px 14px; min-height: 44px; gap: 8px; }
 #seasons input { width: 20px; height: 20px; }
+
+/* 「ここを横にドラッグ」: 黄色・太字(白地でも読めるよう細い黒縁) */
+.pad small, .pad.on small { color: #facc15; font-weight: 800; font-size: .78rem; text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 2px #000; }
