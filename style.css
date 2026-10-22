@@ -280,3 +280,10 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr { display: grid; grid-template-columns: 3em repeat(5, minmax(0, 1fr)); gap: 3px; }
 #refs .sub .pr label { display: grid; grid-template-columns: auto 1fr; align-items: center; justify-items: start; gap: 1px .2em; padding: 2px 3px; width: auto; min-width: 0; }
 #refs .sub .pr label .nm { grid-column: 1 / -1; justify-self: center; white-space: nowrap; }
+
+/* ペース比較の枠は全部同じ大きさ(文字数で変えない) */
+#refs .toprow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+#refs .toprow label { justify-content: center; }
+#paceMode { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; font-size: .8rem; }
+#paceMode > span { flex: 0 0 auto; }
+#paceMode label { flex: 1 1 0; justify-content: center; font-size: .8rem; padding: 6px 4px; white-space: nowrap; }
