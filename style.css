@@ -317,3 +317,10 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr .py { font-size: 12px; }
 #paceLegend { font-size: 13px; }
 #refs .sub .pr label { font-size: 10.2px; }
+
+/* 個別クラブ: 枠は大きめの固定サイズ(幅84px)。入りきらない行は横にスクロール(折り返さない)。年は左に固定 */
+#refs .sub .rows { overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+#refs .sub .pr { display: flex; flex-wrap: nowrap; gap: 4px; width: max-content; min-width: 100%; height: auto; overflow: visible; margin: 4px 0; }
+#refs .sub .pr .py { position: sticky; left: 0; z-index: 1; flex: 0 0 38px; background: var(--bg, #fff); font-size: 13px; display: flex; align-items: center; }
+#refs .sub .pr label { flex: 0 0 84px; width: 84px; height: 34px; padding: 0 4px; gap: 4px; font-size: 13.5px; justify-content: flex-start; }
+#refs .sub .pr label input { width: 13px; height: 13px; }
