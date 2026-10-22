@@ -28,7 +28,8 @@ function textColor(cc) {
   const lum = c => { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16) / 255).map(x => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
   const ratio = c => 1.05 / (lum(c) + 0.05);
   const darken = c => { let x = c; for (let k = 0; k < 12 && ratio(x) < 4.5; k++) x = "#" + [1, 3, 5].map(i => Math.round(parseInt(x.slice(i, i + 2), 16) * 0.9).toString(16).padStart(2, "0")).join(""); return x; };
-  const pick = ratio(cc[0]) >= 3 || !cc[1] || ratio(cc[1]) < 3 ? cc[0] : cc[1];
+  const chroma = c => { const v = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); return Math.max(...v) - Math.min(...v); };
+  const pick = ratio(cc[0]) >= 3 || !cc[1] || ratio(cc[1]) < 3 || chroma(cc[1]) < 40 ? cc[0] : cc[1]; // 白・黒の副色には逃げず、主色を暗くして使う
   return darken(pick);
 }
 
@@ -104,7 +105,7 @@ function fillClubs(reset) {
   const lg = $("#league").value;
   const ids = Object.keys(idx.teams).filter(id => leagueOf(latest(id), id) === lg)
     .sort((a, b) => idx.teams[a].localeCompare(idx.teams[b], "ja"));
-  $("#club").innerHTML = ids.map(id => `<option value="${id}">${idx.teams[id]}</option>`).join("");
+  $("#club").innerHTML = ids.map(id => `<option value="${id}"${CLUB_COLOR[id] ? ` style="color:${textColor(CLUB_COLOR[id])}"` : ""}>${idx.teams[id]}</option>`).join("");
   if (reset || !ids.includes(club)) club = ids[0];
   $("#club").value = club;
 }

@@ -327,3 +327,14 @@ details > .controls { margin: 8px 0 6px; }
 
 #refs .sub .pr label { overflow: visible; }
 #refs .sub .pr label span { white-space: nowrap; }
+
+/* 一番上の枠: リーグ/クラブ/シーズンを大きく・読みやすく。クラブ名はクラブカラー */
+#seasonsBox { font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", system-ui, sans-serif; }
+#seasonsBox > summary .hint { font-size: .93rem; padding: 5px 13px; }
+#seasonsBox .controls { gap: 10px; }
+#seasonsBox .controls label { font-size: .95rem; font-weight: 700; flex: 1 1 140px; }
+#seasonsBox .controls select { font-size: 1.35rem; font-weight: 700; padding: 12px 10px; min-height: 54px; margin-top: 4px; font-family: inherit; }
+#club { color: var(--clubt, var(--fg)); }
+#seasons { gap: 8px; }
+#seasons label { font-size: 1.15rem; font-weight: 600; padding: 7px 14px; min-height: 44px; gap: 8px; }
+#seasons input { width: 20px; height: 20px; }
