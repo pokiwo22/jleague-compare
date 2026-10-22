@@ -289,3 +289,9 @@ details > .controls { margin: 8px 0 6px; }
 #paceMode label { flex: 1 1 0; justify-content: center; font-size: .8rem; padding: 6px 4px; white-space: nowrap; }
 #refs .sub .pr label { height: 34px; box-sizing: border-box; }
 #refs .sub .pr { height: 34px; }
+
+/* 個別クラブの枠: 1行のまま(折り返さない)。5列固定・同じ大きさ */
+#refs .sub .pr label { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 1px; padding: 0 1px; font-size: 8.6px; white-space: nowrap; overflow: hidden; height: 26px; }
+#refs .sub .pr label .nm { grid-column: auto; }
+#refs .sub .pr label input { width: 8px; height: 8px; flex: 0 0 auto; }
+#refs .sub .pr { height: 26px; }
