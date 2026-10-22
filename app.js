@@ -366,7 +366,7 @@ function renderRefs() {
     `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label></div>` +
     (k === "m" ? `<div class="note3">中位は、クラブ数が多いので、平均のみ</div>` :
       inc.map(p => `<div class="pr"><span class="py">${p.label}</span>` + catOf(p)[k].map(x =>
-        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}><span>${x.rk}位</span><span class="nm">${x.t.name}</span></label>`).join("") + "</div>").join("")) + "</div>").join("");
+        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}><span>${x.rk}位</span><span class="nm" style="color:${CLUB_COLOR[x.tid] ? textColor(CLUB_COLOR[x.tid]) : "inherit"}">${x.t.name}</span></label>`).join("") + "</div>").join("")) + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
 }
 
@@ -412,8 +412,7 @@ function drawPace() {
   ds.push({ label: `${pace.label} ${idx.teams[club]}（選択中）`, data: labels.map(r => (r <= pace.through ? pace.by[r - 1][f] : null)), borderColor: c0, backgroundColor: c0,
     borderWidth: 3.5, pointRadius: 0, tension: 0, order: 0 }); // 選択クラブ=一番太い青線(丸印はなし)
   charts.chPace = new Chart($("#chPace"), { type: "line", plugins: [cursor, endLabels], data: { labels, datasets: ds }, options: scaleOpts(f) });
-  const rows = inc.map(p => `<div><b>${p.label}</b> ` + Object.keys(REF).filter(k => refs.has(k)).map(k => `<span class="ml">${refName(k)} ${k === "m" ? `${catOf(p)[k].length}クラブ` : catOf(p)[k].map(x => x.t.name).join("・")}</span>`).join(" ") + "</div>").join("");
-  $("#paceLegend").innerHTML = `<div>分け方: ${paceMode === "at" ? `<b>第${round}節時点の順位</b>（その時点で該当した過去のクラブの、シーズンを通した推移）` : "<b>最終順位</b>"} ／ 太い青線＝選択中のクラブ（今季）／ 太い破線＝過去シーズンの該当クラブの平均（対象シーズンの全クラブ） ／ 細線＝個別のクラブ（色＝順位の種類、線の種類＝シーズン、線の端にシーズン下2桁とクラブ名）。34節制のシーズンは34節まで。</div>` + rows;
+  $("#paceLegend").innerHTML = `<div>分け方: <b>${paceMode === "at" ? `第${round}節時点の順位` : "最終順位"}</b></div><div>太い青線＝選んだクラブ（今季）</div><div>太い破線＝過去の該当クラブの平均</div><div>細線＝個別クラブ（端に年と名前）</div><div>34節制のシーズンは34節まで</div>`;
 }
 
 function hideTips() {

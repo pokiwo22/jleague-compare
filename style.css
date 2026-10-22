@@ -295,3 +295,15 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr label .nm { grid-column: auto; }
 #refs .sub .pr label input { width: 8px; height: 8px; flex: 0 0 auto; }
 #refs .sub .pr { height: 26px; }
+
+/* ペース比較の文字: 読みやすい大きさ・書体に統一(どれも折り返さない) */
+#paceBox { font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+#paceLegend { font-size: 12px; line-height: 1.7; }
+#paceLegend div { white-space: nowrap; }
+#refs .toprow label { font-size: 12px; }
+#refSeasons, #refSeasons label { font-size: 11px; }
+#refs .sub .sh .sn { font-size: 14px; }
+#refs .sub .sh label { font-size: 12px; }
+#refs .sub .pr .py { font-size: 11px; }
+#refs .sub .pr label { font-size: 8.6px; padding: 0; gap: 0; }
+#refs .sub .pr label .nm { font-weight: 700; }
