@@ -275,7 +275,3 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr .py { flex: 0 0 auto; font-weight: 700; color: var(--muted); min-width: 3em; }
 #refs .sub .pr label { flex: 1 1 auto; justify-content: center; white-space: nowrap; font-size: inherit; padding: .1em .35em; min-height: 0; gap: .25em; }
 #refs .sub .pr input { width: .85em; height: .85em; margin: 0; }
-
-/* 相手の順位の数字: トップ3=金 / 上位=銀 / それ以外=白 */
-.sq.rk0 { color: #ffd34d; text-shadow: 0 0 2px rgba(0,0,0,.8); } .sq.rk1 { color: #dfe3e8; text-shadow: 0 0 2px rgba(0,0,0,.8); }
-.sq.d.rk0 { color: #8a5a00; text-shadow: none; } .sq.d.rk1 { color: #6b7280; text-shadow: none; }
