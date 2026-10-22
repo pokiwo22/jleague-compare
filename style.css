@@ -152,11 +152,11 @@ details > .controls { margin: 8px 0 6px; }
 .note2 { font-size: .65rem; color: var(--muted); line-height: 1.7; margin-top: 6px; }
 
 /* 上位・中位・下位への成績 */
-#tierBox { font-size: .85rem; margin: 6px 0; }
-#tierBox > summary { font-size: .74rem; white-space: nowrap; gap: 6px; font-weight: 600; color: var(--fg); min-height: 36px; margin: 0 -8px; padding: 6px 8px; background: var(--tint); border-radius: 5px; }
-#tierBox > summary > span:first-child { overflow: hidden; text-overflow: ellipsis; }
-#tierBox[open] { background: var(--bg); padding-top: 0; }
-#tierBox[open] > summary { border-radius: 5px 5px 0 0; border-bottom: 1px solid var(--tint-line); margin-bottom: 6px; }
+#tierBox , #stripBox  { font-size: .85rem; margin: 6px 0; }
+#tierBox > summary , #stripBox > summary  { font-size: .74rem; white-space: nowrap; gap: 6px; font-weight: 600; color: var(--fg); min-height: 36px; margin: 0 -8px; padding: 6px 8px; background: var(--tint); border-radius: 5px; }
+#tierBox > summary > span:first-child , #stripBox > summary > span:first-child  { overflow: hidden; text-overflow: ellipsis; }
+#tierBox[open] , #stripBox[open]  { background: var(--bg); padding-top: 0; }
+#tierBox[open] > summary , #stripBox[open] > summary  { border-radius: 5px 5px 0 0; border-bottom: 1px solid var(--tint-line); margin-bottom: 6px; }
 .trow { margin: 8px 0 12px; }
 .trow h4 { font-size: .78rem; margin: 0 0 4px; }
 .ttype { display: block; font-size: .68rem; font-weight: 600; color: var(--fg); background: var(--tint); border-radius: 4px; padding: 2px 6px; margin-top: 3px; }
