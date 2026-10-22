@@ -230,7 +230,6 @@ details > .controls { margin: 8px 0 6px; }
 /* 一番下の注意書きは小さく */
 .note { font-size: .6rem; line-height: 1.55; }
 
-.devbar { background: #0f766e; color: #fff; font-size: .7rem; font-weight: 600; text-align: center; padding: 3px 6px; border-radius: 4px; margin-bottom: 6px; }
 
 /* 未消化の試合(今季): 灰色の破線枠のマス */
 .sq.u, .lg.u { background: transparent; color: var(--muted); border: 1px dashed var(--muted); }
