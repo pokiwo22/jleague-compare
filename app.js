@@ -75,7 +75,7 @@ async function init() {
   matchMedia("(prefers-color-scheme: dark)").onchange = draw;
   if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
-  if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(Boolean));
+  if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(k => "tumd".includes(k) && k));
   indOn = new Set((q.get("ind") || "").split(",").filter(Boolean));
   rkMode = q.get("rk") === "final" ? "final" : "at";
   paceMode = q.get("pm") === "at" ? "at" : "final";
@@ -325,13 +325,14 @@ function draw() {
   drawPace();
 }
 
-// ---- ペース比較: 選択クラブの今季 vs 過去の確定シーズンの優勝/2位/3位/下位3クラブ(同じ節数のシーズンのみ) ----
-const REF = { 1: "優勝", 2: "2位", 3: "3位", t: "トップ3", d: "降格圏" };
-const refName = k => (paceMode === "at" && k === "1" ? "1位" : REF[k]);
+// ---- ペース比較: 選択クラブの今季 vs 過去の確定シーズンのトップ3/上位/中位/ボトム3(同じ節数のシーズンのみ) ----
+const REF = { t: "トップ3", u: "上位", m: "中位", d: "ボトム3" }; // 被らない4区分。トップ3=1〜3位 / 上位=4位〜上位1/3 / ボトム3=下から3クラブ / 中位=その間
+const refName = k => REF[k];
+function bands(L) { const n = L.length, k = Math.ceil(n / 3); return { t: L.slice(0, 3), u: L.slice(3, k), m: L.slice(k, n - 3), d: L.slice(n - 3) }; }
 // シーズンごとの分類。final=そのシーズンの最終順位 / at=第N節(選んだ節)の時点の順位(そのクラブのシーズン全体の推移を比べる)
 function catAt(p, n) {
-  const rkm = rankMap(p.s, Math.max(1, Math.min(n, p.rounds))), L = Object.keys(rkm).sort((a, b) => rkm[a] - rkm[b]).map(tid => ({ tid, t: p.s.all[tid] }));
-  return { 1: [L[0]], 2: [L[1]], 3: [L[2]], t: L.slice(0, 3), d: L.slice(-3) };
+  const rkm = rankMap(p.s, Math.max(1, Math.min(n, p.rounds)));
+  return bands(Object.keys(rkm).sort((a, b) => rkm[a] - rkm[b]).map((tid, i) => ({ tid, t: p.s.all[tid], rk: i + 1 })));
 }
 const catOf = p => (paceMode === "at" ? catAt(p, round) : p.catFinal);
 const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
@@ -345,7 +346,7 @@ async function loadPace() {
     if (!d || d.through !== d.rounds) continue; // 確定済みのシーズン(節数が違えば、ある節まで)
     const L = Object.entries(d.teams).map(([tid, t]) => ({ tid, t, b: t.byRound[d.rounds - 1] }))
       .sort((a, b) => b.b.points - a.b.points || b.b.gd - a.b.gd || b.b.gf - a.b.gf);
-    past.push({ key: s.key, label: s.label, rounds: d.rounds, s: { all: d.teams, rk: {} }, catFinal: { 1: [L[0]], 2: [L[1]], 3: [L[2]], t: L.slice(0, 3), d: L.slice(-3) } });
+    past.push({ key: s.key, label: s.label, rounds: d.rounds, s: { all: d.teams, rk: {} }, catFinal: bands(L.map((x, i) => ({ ...x, rk: i + 1 }))) });
   }
   pace = { label: cur.label, lg, by: ct.byRound, through: cd.through, rounds: cd.rounds, past };
   $("#refSeasons").innerHTML = "<span>対象:</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
@@ -355,15 +356,16 @@ async function loadPace() {
   renderRefs();
 }
 
-// 比較の選択UI: 種類(優勝/2位/3位/降格圏)のチェックの中に、シーズンごとの個別クラブを入れ子で出す
+// 比較の選択UI: 区分(トップ3/上位/中位/ボトム3)のチェックの中に、シーズンごとの個別クラブを入れ子で出す
 function renderRefs() {
   if (!pace) return void ($("#refs").innerHTML = "");
   const inc = pace.past.filter(p => !paceOff.has(p.key));
-  const top = Object.entries(REF).map(([k]) => `<label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${refName(k)}${k === "d" ? "3クラブ" : ""}</label>`).join("");
+  const top = Object.entries(REF).map(([k, name]) => `<label class="top"><input type="checkbox" value="${k}" ${refs.has(k) ? "checked" : ""}>${name}</label>`).join("");
   const subs = Object.entries(REF).filter(([k]) => refs.has(k)).map(([k]) =>
     `<div class="sub"><b class="sn" style="color:var(--rf${k})">${refName(k)}</b>` +
     `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label>` +
-    inc.flatMap(p => catOf(p)[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${p.label.replace(/^20/, "")} ${x.t.name}</label>`)).join("") + "</div>").join("");
+    (k === "m" ? `<span class="note3">中位は、クラブ数が多いので、平均のみ</span>` :
+      inc.flatMap(p => catOf(p)[k].map(x => `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${p.label.replace(/^20/, "")} ${x.t.name} ${x.rk}位</label>`)).join("")) + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
 }
 
@@ -399,7 +401,7 @@ function drawPace() {
   const val = (x, r) => x.t.byRound[r - 1]?.[f]; // 節数が少ないシーズンは、その節以降なし
   for (const k of Object.keys(REF).filter(k => refs.has(k))) {
     const xs = inc.flatMap(p => catOf(p)[k]);
-    if (xs.length && !avgOff.has(k)) ds.push({ label: `${refName(k)}${paceMode === "at" ? "だったクラブ" : "クラブ"}の平均`, data: labels.map(r => { const v = xs.map(x => val(x, r)).filter(y => y != null); return v.length ? avg(v) : null; }),
+    if (xs.length && !avgOff.has(k)) ds.push({ label: `${refName(k)}${paceMode === "at" ? "だったクラブ" : "のクラブ"}の平均`, data: labels.map(r => { const v = xs.map(x => val(x, r)).filter(y => y != null); return v.length ? avg(v) : null; }),
       borderColor: css(`--rf${k}`), borderWidth: 2.5, borderDash: [6, 3], pointRadius: 0, tension: 0, order: 1 });
     inc.forEach((p, si) => catOf(p)[k].filter(x => indOn.has(`${p.key}|${x.tid}`)).forEach(x =>
       ds.push({ label: "", endLabel: `${p.label.slice(2)} ${x.t.name}`, data: labels.map(r => val(x, r) ?? null), borderColor: css(`--rf${k}`), borderWidth: 1.5,
@@ -409,7 +411,7 @@ function drawPace() {
   ds.push({ label: `${pace.label} ${idx.teams[club]}（選択中）`, data: labels.map(r => (r <= pace.through ? pace.by[r - 1][f] : null)), borderColor: c0, backgroundColor: c0,
     borderWidth: 3.5, pointRadius: 0, tension: 0, order: 0 }); // 選択クラブ=一番太い青線(丸印はなし)
   charts.chPace = new Chart($("#chPace"), { type: "line", plugins: [cursor, endLabels], data: { labels, datasets: ds }, options: scaleOpts(f) });
-  const rows = inc.map(p => `<div><b>${p.label}</b> ` + Object.keys(REF).filter(k => refs.has(k)).map(k => `<span class="ml">${refName(k)} ${catOf(p)[k].map(x => x.t.name).join("・")}</span>`).join(" ") + "</div>").join("");
+  const rows = inc.map(p => `<div><b>${p.label}</b> ` + Object.keys(REF).filter(k => refs.has(k)).map(k => `<span class="ml">${refName(k)} ${k === "m" ? `${catOf(p)[k].length}クラブ` : catOf(p)[k].map(x => x.t.name).join("・")}</span>`).join(" ") + "</div>").join("");
   $("#paceLegend").innerHTML = `<div>分け方: ${paceMode === "at" ? `<b>第${round}節時点の順位</b>（その時点で該当した過去のクラブの、シーズンを通した推移）` : "<b>最終順位</b>"} ／ 太い青線＝選択中のクラブ（今季）／ 太い破線＝過去シーズンの該当クラブの平均（対象シーズンの全クラブ） ／ 細線＝個別のクラブ（色＝順位の種類、線の種類＝シーズン、線の端にシーズン下2桁とクラブ名）。34節制のシーズンは34節まで。</div>` + rows;
 }
 
