@@ -366,7 +366,7 @@ function renderRefs() {
     `<label><input type="checkbox" data-avg="${k}" ${avgOff.has(k) ? "" : "checked"}>平均</label></div>` +
     (k === "m" ? `<div class="note3">中位は、クラブ数が多いので、平均のみ</div>` :
       inc.map(p => `<div class="pr"><span class="py">${p.label}</span>` + catOf(p)[k].map(x =>
-        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}>${x.rk}位 ${x.t.name}</label>`).join("") + "</div>").join("")) + "</div>").join("");
+        `<label><input type="checkbox" data-ind="${p.key}|${x.tid}" ${indOn.has(`${p.key}|${x.tid}`) ? "checked" : ""}><span>${x.rk}位</span><span class="nm">${x.t.name}</span></label>`).join("") + "</div>").join("")) + "</div>").join("");
   $("#refs").innerHTML = `<div class="toprow">${top}</div>${subs}`;
 }
 

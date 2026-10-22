@@ -275,3 +275,8 @@ details > .controls { margin: 8px 0 6px; }
 #refs .sub .pr .py { flex: 0 0 auto; font-weight: 700; color: var(--muted); min-width: 3em; }
 #refs .sub .pr label { flex: 0 0 auto; justify-content: center; white-space: nowrap; font-size: inherit; padding: .1em .35em; min-height: 0; gap: .25em; }
 #refs .sub .pr input { width: .85em; height: .85em; margin: 0; }
+
+/* 個別クラブの枠: どのクラブも同じ大きさ(5列固定。順位の下にクラブ名) */
+#refs .sub .pr { display: grid; grid-template-columns: 3em repeat(5, minmax(0, 1fr)); gap: 3px; }
+#refs .sub .pr label { display: grid; grid-template-columns: auto 1fr; align-items: center; justify-items: start; gap: 1px .2em; padding: 2px 3px; width: auto; min-width: 0; }
+#refs .sub .pr label .nm { grid-column: 1 / -1; justify-self: center; white-space: nowrap; }
