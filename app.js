@@ -9,6 +9,7 @@ const files = {};
 
 // クラブカラー [メイン, サブ]。色名はWikipedia(チームカラー欄)に基づく。色コードはユニフォーム定義があるものはそれ、無いものは近似値(公式の指定コードではない)
 const CLUB_COLOR = {
+  岩手: ["#D7000F", "#111111"], 鹿児島: ["#0B1F5C", "#FFFFFF"], 今治: ["#005BAC", "#FFE100"], 八戸: ["#00844A", "#FFFFFF"], 宮崎: ["#F5C400", "#1B3C87"],
   akita: ["#0044FF", "#6EC1E4"], chiba: ["#FFE100", "#00A040"], cosaka: ["#FA1A82", "#002060"], ehime: ["#ED6F23", "#F7AE23"],
   ftokyo: ["#0A3C8C", "#D4002A"], fujieda: ["#8689C3", "#00A040"], fukuoka: ["#0B1E4B", "#939393"], gosaka: ["#0068B7", "#000000"],
   hiroshima: ["#512D8E"], iwaki: ["#D3042C", "#00508F"], iwata: ["#5BA8DC"], kanazawa: ["#D7000F", "#000000"], kashima: ["#A5001E"],
