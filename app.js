@@ -41,8 +41,8 @@ async function init() {
   idx = await fetch("data/index.json", { cache: "no-cache" }).then(r => r.json()).catch(() => null);
   if (!idx || !idx.seasons.length) return void ($("#cards").textContent = "データがありません。");
   $("#updated").textContent = new Date(idx.updated).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  { // 次回の自動更新(GitHub Actionsのcron: 土日 JST 16:30/19:30/21:30、平日 21:30)。端末の地域に関係なく日本時間で表示
-    const slots = (dow) => (dow === 0 || dow === 6 ? [[7, 30], [10, 30], [12, 30]] : [[12, 30]]), now = Date.now();
+  { // 次回の自動更新(GitHub Actionsのcron: 土日 JST 16:00〜22:30の30分ごと、平日 20:30/21:30/22:30)。端末の地域に関係なく日本時間で表示
+    const slots = (dow) => (dow === 0 || dow === 6 ? Array.from({ length: 14 }, (_, i) => [7 + (i >> 1), (i & 1) * 30]) : [[11, 30], [12, 30], [13, 30]]), now = Date.now();
     let next = null;
     for (let d = 0; d < 8 && !next; d++) {
       const day = new Date(now + d * 864e5);
