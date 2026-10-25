@@ -181,7 +181,7 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(rkMode === "final" ? { rk: "final" } : {}), ...(paceMode === "at" ? { pm: "at" } : {}) })), 250);
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ...(paceAuto ? {} : { ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(paceMode === "at" ? { pm: "at" } : {}) }), ...(rkMode === "final" ? { rk: "final" } : {}) })), 250); // 自動の初期選択はURLに書かない(書くと次回「自分で設定した」扱いになり、クラブを変えても追従しない)
   cards();
   if ($("#pmN")) $("#pmN").textContent = round;
   if (paceMode === "at" && $("#paceBox").open) { clearTimeout(paceTimer); paceTimer = setTimeout(() => { renderRefs(); drawPace(); }, 140); }
