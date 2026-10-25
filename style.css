@@ -340,3 +340,9 @@ details > .controls { margin: 8px 0 6px; }
 
 /* 「ここを横にドラッグ」: 黄色・太字(白地でも読めるよう細い黒縁) */
 .pad small, .pad.on small { color: #facc15; font-weight: 800; font-size: .78rem; text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 2px #000; }
+
+/* 累積の見出しの右: 最終更新(自動更新) */
+.chart h2 { display: flex; align-items: center; flex-wrap: nowrap; }
+.chart h2 .upd { margin-left: auto; font-size: .78rem; font-weight: 400; color: var(--muted); white-space: nowrap; }
+.chart h2 .upd b { font-weight: 700; color: var(--fg); }
+.chart h2 .upd small { font-size: .7rem; }

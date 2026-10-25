@@ -4,7 +4,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", paceMode = "final", paceTimer = 0, indOn = new Set(), avgOff = new Set(), pace = null, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", paceMode = "final", paceTimer = 0, indOn = new Set(), avgOff = new Set(), pace = null, paceAuto = true, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 // クラブカラー [メイン, サブ]。色名はWikipedia(チームカラー欄)に基づく。色コードはユニフォーム定義があるものはそれ、無いものは近似値(公式の指定コードではない)
@@ -40,7 +40,7 @@ const leagueOf = (s, id) => (s.leagues.J1?.includes(id) ? "J1" : s.leagues.J2?.i
 async function init() {
   idx = await fetch("data/index.json", { cache: "no-cache" }).then(r => r.json()).catch(() => null);
   if (!idx || !idx.seasons.length) return void ($("#cards").textContent = "データがありません。");
-  $("#updated").textContent = new Date(idx.updated).toLocaleString("ja-JP");
+  $("#updated").textContent = new Date(idx.updated).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   const q = new URLSearchParams(location.search);
   club = q.get("club") && idx.teams[q.get("club")] ? q.get("club") : idx.seasons[0].leagues.J1[0];
   picked = q.get("seasons") ? q.get("seasons").split(",") : idx.seasons.slice(0, 2).map(s => s.key);
@@ -77,13 +77,14 @@ async function init() {
   matchMedia("(prefers-color-scheme: dark)").onchange = draw;
   if (["points", "gd", "gf", "ga"].includes(q.get("m"))) $("#metric").value = q.get("m");
   $("#metric").onchange = () => { draw(); setRound(round); };
+  paceAuto = !q.has("ind") && !(q.has("ref") && q.get("ref"));
   if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(k => "tumd".includes(k) && k));
   indOn = new Set((q.get("ind") || "").split(",").filter(Boolean));
   rkMode = q.get("rk") === "final" ? "final" : "at";
   paceMode = q.get("pm") === "at" ? "at" : "final";
   document.querySelectorAll('#paceMode input[name="pm"]').forEach(i => {
     i.checked = i.value === paceMode;
-    i.onchange = () => { paceMode = i.value; renderRefs(); drawPace(); setRound(round); };
+    i.onchange = () => { paceAuto = false; paceMode = i.value; renderRefs(); drawPace(); setRound(round); };
   });
   document.querySelectorAll('#zoomCtl input[name="zrk"]').forEach(i => {
     i.checked = i.value === rkMode;
@@ -92,7 +93,7 @@ async function init() {
   avgOff = new Set((q.get("avgoff") || "").split(",").filter(Boolean));
   $("#paceBox").ontoggle = () => { drawPace(); fitChips(); };
   $("#refs").onchange = e => { // 入れ子のチェック(種類 / 個別クラブ)を1か所で処理
-    const i = e.target;
+    const i = e.target; paceAuto = false;
     if (i.dataset.avg) i.checked ? avgOff.delete(i.dataset.avg) : avgOff.add(i.dataset.avg);
     else if (i.dataset.ind) i.checked ? indOn.add(i.dataset.ind) : indOn.delete(i.dataset.ind);
     else i.checked ? refs.add(i.value) : refs.delete(i.value);
@@ -351,9 +352,14 @@ async function loadPace() {
     past.push({ key: s.key, label: s.label, rounds: d.rounds, s: { all: d.teams, rk: {} }, catFinal: bands(L.map((x, i) => ({ ...x, rk: i + 1 }))) });
   }
   pace = { label: cur.label, lg, by: ct.byRound, through: cd.through, rounds: cd.rounds, past };
+  if (paceAuto) { // 初期表示: 昨季の、最新順位が上半分なら「トップ3」・下半分なら「ボトム3」を、各クラブで表示(平均なし)
+    const n = Object.keys(cd.teams).length, rk = rankMap({ all: cd.teams, rk: {} }, Math.max(1, cd.through))[club] || 1;
+    const prev = past.find(p => p.key === idx.seasons[1]?.key) || past[0], k = rk <= n / 2 ? "t" : "d";
+    if (prev) { paceOff = new Set(past.filter(p => p !== prev).map(p => p.key)); refs = new Set([k]); avgOff = new Set([k]); indOn = new Set(prev.catFinal[k].map(x => `${prev.key}|${x.tid}`)); paceMode = "final"; document.querySelectorAll('#paceMode input[name="pm"]').forEach(i => (i.checked = i.value === paceMode)); }
+  }
   $("#refSeasons").innerHTML = "<span class=\"lab\">対象</span>" + past.map(p => `<label><input type="checkbox" value="${p.key}" ${paceOff.has(p.key) ? "" : "checked"}>${p.label}</label>`).join("");
   $("#refSeasons").querySelectorAll("input").forEach(i => {
-    i.onchange = () => { i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); renderRefs(); drawPace(); };
+    i.onchange = () => { paceAuto = false; i.checked ? paceOff.delete(i.value) : paceOff.add(i.value); renderRefs(); drawPace(); };
   });
   renderRefs();
 }
