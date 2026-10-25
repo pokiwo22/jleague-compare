@@ -61,7 +61,11 @@ async function init() {
   // 下のパッド: どこを触っても中央にバーが出て、そこから横ドラッグで相対移動。画面幅1/3動かすと全節を移動できる
   const pad = $("#pad"), th = pad.querySelector(".thumb");
   let x0, r0, dx, raf;
+  const lock = $("#padLock"); // 左端の鍵ボタン: ONの間はドラッグ・キーでも節が動かない
+  let locked = false;
+  lock.onclick = () => { locked = !locked; lock.classList.toggle("on", locked); lock.setAttribute("aria-pressed", locked); pad.classList.toggle("locked", locked); };
   pad.onpointerdown = e => {
+    if (locked || e.target.closest("#padLock")) return;
     x0 = e.clientX; r0 = round; dx = 0; th.style.transform = "translateX(0)"; pad.classList.add("on");
     try { pad.setPointerCapture(e.pointerId); } catch {}
   };
@@ -80,6 +84,7 @@ async function init() {
   $("#round").onkeydown = e => e.stopPropagation();
   document.onkeydown = e => {
     if (e.target.tagName === "SELECT" || e.target.type === "checkbox") return;
+    if (locked) return;
     if (e.key === "ArrowLeft") setRound(round - 1);
     if (e.key === "ArrowRight") setRound(round + 1);
   };

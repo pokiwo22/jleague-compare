@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jリーグ 節ごと比較</title>
-<link rel="stylesheet" href="style.css?v=49">
+<link rel="stylesheet" href="style.css?v=51">
 </head>
 <body>
 <main>
@@ -34,7 +34,7 @@
   <details id="paceBox"><summary><span>過去の上位・降格クラブとのペース比較</span><span class="hint">▼ タップ or クリック</span></summary><section class="chart" id="paceSec"><div id="refSeasons" class="refs"></div><div class="box"><canvas id="chPace"></canvas></div><div id="paceMode" class="refs"><span>分け方:</span><label><input type="radio" name="pm" value="final">最終順位</label><label><input type="radio" name="pm" value="at">第<output id="pmN">11</output>節時点の順位</label></div><div id="refs"></div><div id="paceLegend"></div></section></details>
 
   <section class="slider">
-    <div class="pad" id="pad"><span class="thumb"></span><label>第<output id="roundOut">1</output>節時点 <small>◀ ここを横にドラッグ ▶</small></label></div>
+    <div class="pad" id="pad"><span class="thumb"></span><button type="button" id="padLock" aria-pressed="false" aria-label="節の移動をロック"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path class="op" d="M8 11V8a4 4 0 0 1 7.5-2"/><path class="cl" d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button><label>第<output id="roundOut">1</output>節時点 <small>◀ ここを横にドラッグ ▶</small></label></div>
     <input type="range" id="round" min="1" max="38" value="1" hidden>
   </section>
 
@@ -42,6 +42,6 @@
 © 2026 pokiwo22（プログラム・画面デザイン）。無断転載・複製・商用利用を禁止します。データの権利は各権利者に帰属します。<br>操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=49"></script>
+<script src="app.js?v=51"></script>
 </body>
 </html>
