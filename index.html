@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jリーグ 節ごと比較</title>
-<link rel="stylesheet" href="style.css?v=44">
+<link rel="stylesheet" href="style.css?v=45">
 </head>
 <body>
 <main>
@@ -21,7 +21,7 @@
 
   <section id="cards" class="cards" aria-live="polite"></section>
 
-  <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="points">勝ち点</option><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select><span class="upd">最終更新 <b id="updated">-</b><small>（自動更新）</small><br><small class="nx">次回 <b id="nextUpd">-</b>ごろ</small></span></h2><div class="box"><canvas id="chPts"></canvas></div><div id="mgrLegend"></div>
+  <section class="chart"><h2>累積<select id="metric" aria-label="表示する指標"><option value="points">勝ち点</option><option value="gd">得失点</option><option value="gf">得点</option><option value="ga">失点</option></select><span class="upd"><small class="au">自動更新</small> 最終<b id="updated">-</b> 次回<b id="nextUpd">-</b></span></h2><div class="box"><canvas id="chPts"></canvas></div><div id="mgrLegend"></div>
     </section>
 
   <details id="stripBox"><summary><span>対戦記録</span><span class="hint">▼ タップ or クリック</span></summary>
@@ -42,6 +42,6 @@
 © 2026 pokiwo22（プログラム・画面デザイン）。無断転載・複製・商用利用を禁止します。データの権利は各権利者に帰属します。<br>操作: 画面下のエリアを横にドラッグして節を動かします（PCはキーボード ←→ でも可）。グラフを触っても節は変わりません。</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="app.js?v=44"></script>
+<script src="app.js?v=45"></script>
 </body>
 </html>

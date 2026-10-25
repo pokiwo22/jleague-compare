@@ -350,5 +350,8 @@ details > .controls { margin: 8px 0 6px; }
 .chart h2 .upd { text-align: right; line-height: 1.35; }
 .chart h2 .upd .nx { font-size: .72rem; }
 .chart h2 .upd .nx b { font-weight: 600; }
-.chart h2 .upd small:not(.nx) { color: #15803d; font-weight: 700; font-size: .78rem; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chart h2 .upd small:not(.nx) { color: #4ade80; } }
+.chart h2 .upd .au { color: #15803d; font-weight: 700; font-size: .78rem; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chart h2 .upd .au { color: #4ade80; } }
+
+.chart h2 .upd { font-size: .68rem; line-height: 1.2; white-space: nowrap; min-width: 0; }
+.chart h2 .upd b { margin: 0 .35em 0 .15em; }
