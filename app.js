@@ -4,7 +4,7 @@ const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).
 const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "±") + Math.abs(n);
 const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "at", paceMode = "final", paceTimer = 0, indOn = new Set(), avgOff = new Set(), pace = null, paceAuto = true, idx, club, picked = [], round = 1, S = [], charts = {};
+let urlTimer, refs = new Set(), paceOff = new Set(), rkMode = "final", paceMode = "final", paceTimer = 0, indOn = new Set(), avgOff = new Set(), pace = null, paceAuto = true, idx, club, picked = [], round = 1, S = [], charts = {};
 const files = {};
 
 // クラブカラー [メイン, サブ]。色名はWikipedia(チームカラー欄)に基づく。色コードはユニフォーム定義があるものはそれ、無いものは近似値(公式の指定コードではない)
@@ -89,7 +89,7 @@ async function init() {
   paceAuto = !q.has("ind") && !(q.has("ref") && q.get("ref"));
   if (q.has("ref")) refs = new Set(q.get("ref").split(",").filter(k => "tumd".includes(k) && k));
   indOn = new Set((q.get("ind") || "").split(",").filter(Boolean));
-  rkMode = q.get("rk") === "final" ? "final" : "at";
+  rkMode = q.get("rk") === "at" ? "at" : "final";
   paceMode = q.get("pm") === "at" ? "at" : "final";
   document.querySelectorAll('#paceMode input[name="pm"]').forEach(i => {
     i.checked = i.value === paceMode;
@@ -181,7 +181,7 @@ function setRound(r) {
   $("#round").value = round;
   $("#roundOut").textContent = round;
   clearTimeout(urlTimer); // URL更新は操作が止まってから(連続replaceStateは重く、iOSでは制限もある)
-  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ...(paceAuto ? {} : { ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(paceMode === "at" ? { pm: "at" } : {}) }), ...(rkMode === "final" ? { rk: "final" } : {}) })), 250); // 自動の初期選択はURLに書かない(書くと次回「自分で設定した」扱いになり、クラブを変えても追従しない)
+  urlTimer = setTimeout(() => history.replaceState(null, "", "?" + new URLSearchParams({ club, seasons: picked.join(","), round, m: $("#metric").value, ...(paceAuto ? {} : { ref: [...refs].join(","), ...(indOn.size ? { ind: [...indOn].join(",") } : {}), ...(avgOff.size ? { avgoff: [...avgOff].join(",") } : {}), ...(paceMode === "at" ? { pm: "at" } : {}) }), ...(rkMode === "at" ? { rk: "at" } : {}) })), 250); // 自動の初期選択はURLに書かない(書くと次回「自分で設定した」扱いになり、クラブを変えても追従しない)
   cards();
   if ($("#pmN")) $("#pmN").textContent = round;
   if (paceMode === "at" && $("#paceBox").open) { clearTimeout(paceTimer); paceTimer = setTimeout(() => { renderRefs(); drawPace(); }, 140); }
