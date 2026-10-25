@@ -55,8 +55,8 @@ async function init() {
   picked = q.get("seasons") ? q.get("seasons").split(",") : idx.seasons.slice(0, 2).map(s => s.key);
   round = +q.get("round") || 0;
   $("#league").value = leagueOf(latest(club), club) || "J1";
-  fillClubs();
-  $("#league").onchange = () => { fillClubs(true); refresh(); };
+  await fillClubs(!q.get("club") || !idx.teams[q.get("club")]);
+  $("#league").onchange = async () => { await fillClubs(true); refresh(); };
   $("#club").onchange = () => { club = $("#club").value; refresh(); };
   // 下のパッド: どこを触っても中央にバーが出て、そこから横ドラッグで相対移動。画面幅1/3動かすと全節を移動できる
   const pad = $("#pad"), th = pad.querySelector(".thumb");
@@ -111,11 +111,13 @@ async function init() {
   refresh();
 }
 
-function fillClubs(reset) {
-  const lg = $("#league").value;
+// クラブの選択肢: 今季の最新の順位表と同じ並び(順位つき)。データが更新されるたびに自動で入れ替わる
+async function fillClubs(reset) {
+  const lg = $("#league").value, cur = idx.seasons[0], d = await load(cur.key, lg);
+  const rk = d?.teams ? rankMap({ all: d.teams, rk: {} }, Math.max(1, d.through || 1)) : {};
   const ids = Object.keys(idx.teams).filter(id => leagueOf(latest(id), id) === lg)
-    .sort((a, b) => idx.teams[a].localeCompare(idx.teams[b], "ja"));
-  $("#club").innerHTML = ids.map(id => `<option value="${id}"${CLUB_COLOR[id] ? ` style="color:${textColor(CLUB_COLOR[id])}"` : ""}>${idx.teams[id]}</option>`).join("");
+    .sort((a, b) => (rk[a] ?? 99) - (rk[b] ?? 99) || idx.teams[a].localeCompare(idx.teams[b], "ja"));
+  $("#club").innerHTML = ids.map(id => `<option value="${id}"${CLUB_COLOR[id] ? ` style="color:${textColor(CLUB_COLOR[id])}"` : ""}>${rk[id] ? `${rk[id]}位 ` : ""}${idx.teams[id]}</option>`).join("");
   if (reset || !ids.includes(club)) club = ids[0];
   $("#club").value = club;
 }
