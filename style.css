@@ -346,3 +346,7 @@ details > .controls { margin: 8px 0 6px; }
 .chart h2 .upd { margin-left: auto; font-size: .78rem; font-weight: 400; color: var(--muted); white-space: nowrap; }
 .chart h2 .upd b { font-weight: 700; color: var(--fg); }
 .chart h2 .upd small { font-size: .7rem; }
+
+.chart h2 .upd { text-align: right; line-height: 1.35; }
+.chart h2 .upd .nx { font-size: .72rem; }
+.chart h2 .upd .nx b { font-weight: 600; }

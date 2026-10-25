@@ -41,6 +41,15 @@ async function init() {
   idx = await fetch("data/index.json", { cache: "no-cache" }).then(r => r.json()).catch(() => null);
   if (!idx || !idx.seasons.length) return void ($("#cards").textContent = "データがありません。");
   $("#updated").textContent = new Date(idx.updated).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  { // 次回の自動更新(GitHub Actionsのcron: 土日 JST 16:30/19:30/21:30、平日 21:30)。端末の地域に関係なく日本時間で表示
+    const slots = (dow) => (dow === 0 || dow === 6 ? [[7, 30], [10, 30], [12, 30]] : [[12, 30]]), now = Date.now();
+    let next = null;
+    for (let d = 0; d < 8 && !next; d++) {
+      const day = new Date(now + d * 864e5);
+      for (const [h, m] of slots(day.getUTCDay())) { const t = Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), h, m); if (t > now) { next = t; break; } }
+    }
+    $("#nextUpd").textContent = new Date(next).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+  }
   const q = new URLSearchParams(location.search);
   club = q.get("club") && idx.teams[q.get("club")] ? q.get("club") : idx.seasons[0].leagues.J1[0];
   picked = q.get("seasons") ? q.get("seasons").split(",") : idx.seasons.slice(0, 2).map(s => s.key);
