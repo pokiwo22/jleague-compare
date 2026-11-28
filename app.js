@@ -487,7 +487,7 @@ function cards() {
     const rel = name(s.key);
     const head = `<div class="card-top">
       <span class="card-season">${esc(s.label)}<span class="card-tag">${esc(s.lg)}</span>${rel ? `<span class="card-tag${rel === "今季" ? " is-now" : ""}">${rel}</span>` : ""}</span>
-      ${mg ? `<span class="mgr-badge" title="${esc(mg.n)}"><i class="dot" style="background:${mgrColor(s, i, k)}"></i>${esc(short(mg.n))}</span>` : ""}
+      ${mg ? `<span class="mgr-badge" title="${esc(mg.n)}"><i class="dot" style="background:${mgrColor(s, i, k)}"></i><span class="mgr-name">${esc(short(mg.n))}</span></span>` : `<span class="mgr-badge" aria-hidden="true"></span>`}
     </div>`;
 
     if (!b) {

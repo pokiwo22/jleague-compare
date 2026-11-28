@@ -336,10 +336,9 @@ button { cursor: pointer; }
 
 .card-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
 .card-season {
   display: inline-flex;
@@ -349,6 +348,7 @@ button { cursor: pointer; }
   font-size: 0.78rem;
   font-weight: 800;
   color: var(--fg);
+  white-space: nowrap;
 }
 .card-tag {
   padding: 1px 5px;
@@ -361,13 +361,20 @@ button { cursor: pointer; }
 .card-tag.is-now { background: var(--accent-soft); color: var(--accent); }
 
 .mgr-badge {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
+  min-height: 1.45em;
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--fg-2);
   white-space: nowrap;
+}
+.mgr-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .dot {
   display: inline-block;
